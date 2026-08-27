@@ -40,7 +40,7 @@ export const syncProfileToSupabase = async (profileData: any) => {
     const validId = ensureValidUuid(profileData.id);
     const validCoupleId = ensureValidUuid(profileData.coupleId);
 
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('profiles')
       .upsert({
         id: validId,
@@ -55,7 +55,6 @@ export const syncProfileToSupabase = async (profileData: any) => {
         menstrual_sharing_level: profileData.menstrualSharingLevel,
         updated_at: new Date().toISOString()
       }, { onConflict: 'user_id' });
-    if (error) console.warn('Supabase profile sync note:', error.message || error);
     return data;
   } catch (e) {
     return null;
@@ -70,12 +69,11 @@ export const fetchLiveHouseholdItemsFromSupabase = async (coupleId: string) => {
     const { data, error } = await supabase
       .from('household_items')
       .select('*')
-      .eq('couple_id', validCoupleId)
-      .order('created_at', { ascending: false });
-    if (error) {
+      .eq('couple_id', validCoupleId);
+    if (error || !data) {
       return [];
     }
-    return (data || []).map((i) => ({
+    return data.map((i) => ({
       id: i.id,
       coupleId: i.couple_id,
       name: i.name,
@@ -117,8 +115,7 @@ export const insertHouseholdItemToSupabase = async (itemData: any) => {
       warranty_months: itemData.warrantyMonths,
       is_workplace_apartment: itemData.isWorkplaceApartment || false
     };
-    const { data, error } = await supabase.from('household_items').upsert(dbPayload, { onConflict: 'id' });
-    if (error) console.warn('Supabase item upsert note:', error.message || error);
+    const { data } = await supabase.from('household_items').upsert(dbPayload, { onConflict: 'id' });
     return data;
   } catch (e) {
     return null;
@@ -135,12 +132,11 @@ export const fetchLiveTransactionsFromSupabase = async (userId: string, coupleId
     const { data, error } = await supabase
       .from('financial_transactions')
       .select('*')
-      .or(`user_id.eq.${validUserId},couple_id.eq.${validCoupleId}`)
-      .order('created_at', { ascending: false });
-    if (error) {
+      .or(`user_id.eq.${validUserId},couple_id.eq.${validCoupleId}`);
+    if (error || !data) {
       return [];
     }
-    return (data || []).map((t) => ({
+    return data.map((t) => ({
       id: t.id,
       userId: t.user_id,
       coupleId: t.couple_id,
@@ -184,8 +180,7 @@ export const insertTransactionToSupabase = async (txData: any) => {
       paid_by: txData.paidBy,
       status: txData.status || 'completed'
     };
-    const { data, error } = await supabase.from('financial_transactions').upsert(dbPayload, { onConflict: 'id' });
-    if (error) console.warn('Supabase transaction note:', error.message || error);
+    const { data } = await supabase.from('financial_transactions').upsert(dbPayload, { onConflict: 'id' });
     return data;
   } catch (e) {
     return null;
@@ -201,12 +196,11 @@ export const fetchLiveTasksFromSupabase = async (coupleId: string) => {
     const { data, error } = await supabase
       .from('shared_tasks')
       .select('*')
-      .eq('couple_id', validCoupleId)
-      .order('created_at', { ascending: false });
-    if (error) {
+      .eq('couple_id', validCoupleId);
+    if (error || !data) {
       return [];
     }
-    return (data || []).map((tsk) => ({
+    return data.map((tsk) => ({
       id: tsk.id,
       coupleId: tsk.couple_id,
       title: tsk.title,
@@ -239,8 +233,7 @@ export const insertTaskToSupabase = async (taskData: any) => {
       status: taskData.status || 'pending',
       category: taskData.category || 'General'
     };
-    const { data, error } = await supabase.from('shared_tasks').upsert(dbPayload, { onConflict: 'id' });
-    if (error) console.warn('Supabase task note:', error.message || error);
+    const { data } = await supabase.from('shared_tasks').upsert(dbPayload, { onConflict: 'id' });
     return data;
   } catch (e) {
     return null;
@@ -257,7 +250,6 @@ export const fetchDutySetupFromSupabase = async (coupleId: string) => {
       .from('duty_schedules')
       .select('*')
       .eq('couple_id', validCoupleId)
-      .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
     if (error || !data) {
@@ -288,8 +280,7 @@ export const insertDutySetupToSupabase = async (setupData: any) => {
       day2_type: setupData.day2Type,
       is_configured: setupData.isConfigured || true
     };
-    const { data, error } = await supabase.from('duty_schedules').insert(dbPayload);
-    if (error) console.warn('Supabase duty setup note:', error.message || error);
+    const { data } = await supabase.from('duty_schedules').insert(dbPayload);
     return data;
   } catch (e) {
     return null;

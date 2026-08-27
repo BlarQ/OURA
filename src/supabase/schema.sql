@@ -1,4 +1,4 @@
--- OURA Production PostgreSQL Database Schema & Resilient Policies
+-- OURA Production PostgreSQL Database Schema & Migration Script
 -- Enables real-time synchronization between connected couples (e.g. adedamolaogunlala@gmail.com & collinsogunlala@gmail.com)
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -162,6 +162,15 @@ CREATE TABLE IF NOT EXISTS decisions (
   status TEXT DEFAULT 'proposed',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- 6. MIGRATION ALTER COLUMNS (SAFE TO RUN IN SUPABASE SQL EDITOR)
+ALTER TABLE duty_schedules ADD COLUMN IF NOT EXISTS couple_id TEXT;
+ALTER TABLE duty_schedules ADD COLUMN IF NOT EXISTS day1_date DATE;
+ALTER TABLE duty_schedules ADD COLUMN IF NOT EXISTS day1_type TEXT;
+ALTER TABLE duty_schedules ADD COLUMN IF NOT EXISTS day2_date DATE;
+ALTER TABLE duty_schedules ADD COLUMN IF NOT EXISTS day2_type TEXT;
+ALTER TABLE duty_schedules ADD COLUMN IF NOT EXISTS is_configured BOOLEAN DEFAULT TRUE;
+ALTER TABLE duty_schedules ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
 
 -- PERMISSIVE RLS POLICIES FOR REAL-TIME COUPLE SYNC
 ALTER TABLE profiles DISABLE ROW LEVEL SECURITY;
