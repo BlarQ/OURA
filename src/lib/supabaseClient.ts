@@ -17,20 +17,37 @@ export const supabase = createClient(
   supabaseAnonKey || 'placeholder-key'
 );
 
-// Supabase Helper Methods for Real-Time Data Persistence Across Accounts
+// Helper to guarantee 100% valid PostgreSQL UUID compliance for both UUID & TEXT columns
+export const ensureValidUuid = (str?: string): string => {
+  if (!str || str.trim() === '') return 'a7782000-0000-4000-a000-000000000001';
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (uuidRegex.test(str)) return str;
+
+  // Generate deterministic 36-char valid UUID format from string
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  const hex = Math.abs(hash).toString(16).padStart(8, '0');
+  return `a7782000-0000-4000-a000-${hex.padStart(12, '0').slice(0, 12)}`;
+};
 
 // 1. Profile Sync
 export const syncProfileToSupabase = async (profileData: any) => {
   if (!isSupabaseConfigured()) return null;
+  const validId = ensureValidUuid(profileData.id);
+  const validCoupleId = ensureValidUuid(profileData.coupleId);
+
   const { data, error } = await supabase
     .from('profiles')
     .upsert({
-      id: profileData.id,
-      user_id: profileData.id,
+      id: validId,
+      user_id: validId,
       full_name: profileData.name,
       role: profileData.role,
       avatar_url: profileData.avatar,
-      couple_id: profileData.coupleId,
+      couple_id: validCoupleId,
       is_discreet_mode: profileData.isDiscreetMode,
       salary_sharing_level: profileData.salarySharingLevel,
       is_salary_shared: profileData.isSalaryShared,
@@ -44,10 +61,11 @@ export const syncProfileToSupabase = async (profileData: any) => {
 // 2. Household Items Sync
 export const fetchLiveHouseholdItemsFromSupabase = async (coupleId: string) => {
   if (!isSupabaseConfigured() || !coupleId) return [];
+  const validCoupleId = ensureValidUuid(coupleId);
   const { data, error } = await supabase
     .from('household_items')
     .select('*')
-    .eq('couple_id', coupleId)
+    .or(`couple_id.eq.${coupleId},couple_id.eq.${validCoupleId}`)
     .order('created_at', { ascending: false });
   if (error) {
     console.error('Supabase household items fetch error:', error);
@@ -73,9 +91,12 @@ export const fetchLiveHouseholdItemsFromSupabase = async (coupleId: string) => {
 
 export const insertHouseholdItemToSupabase = async (itemData: any) => {
   if (!isSupabaseConfigured()) return null;
+  const validItemId = ensureValidUuid(itemData.id);
+  const validCoupleId = ensureValidUuid(itemData.coupleId || 'OURA-7782-W');
+
   const dbPayload = {
-    id: itemData.id,
-    couple_id: itemData.coupleId || 'OURA-7782-W',
+    id: validItemId,
+    couple_id: validCoupleId,
     name: itemData.name,
     category: itemData.category,
     room: itemData.room || 'Living Room',
@@ -96,10 +117,13 @@ export const insertHouseholdItemToSupabase = async (itemData: any) => {
 // 3. Transactions Sync
 export const fetchLiveTransactionsFromSupabase = async (userId: string, coupleId: string) => {
   if (!isSupabaseConfigured()) return [];
+  const validUserId = ensureValidUuid(userId);
+  const validCoupleId = ensureValidUuid(coupleId);
+
   const { data, error } = await supabase
     .from('financial_transactions')
     .select('*')
-    .or(`user_id.eq.${userId},couple_id.eq.${coupleId}`)
+    .or(`user_id.eq.${userId},user_id.eq.${validUserId},couple_id.eq.${coupleId},couple_id.eq.${validCoupleId}`)
     .order('created_at', { ascending: false });
   if (error) {
     console.error('Supabase transactions fetch error:', error);
@@ -125,17 +149,21 @@ export const fetchLiveTransactionsFromSupabase = async (userId: string, coupleId
 
 export const insertTransactionToSupabase = async (txData: any) => {
   if (!isSupabaseConfigured()) return null;
+  const validTxId = ensureValidUuid(txData.id);
+  const validUserId = ensureValidUuid(txData.userId);
+  const validCoupleId = ensureValidUuid(txData.coupleId || 'OURA-7782-W');
+
   const dbPayload = {
-    id: txData.id,
-    user_id: txData.userId,
-    couple_id: txData.coupleId || 'OURA-7782-W',
+    id: validTxId,
+    user_id: validUserId,
+    couple_id: validCoupleId,
     type: txData.type,
     amount: txData.amount,
     date: txData.date,
     category: txData.category,
     description: txData.description,
     payment_method: txData.paymentMethod,
-    related_item_id: txData.relatedItemId,
+    related_item_id: txData.relatedItemId ? ensureValidUuid(txData.relatedItemId) : null,
     is_recurring: txData.isRecurring || false,
     is_shared: txData.isShared || false,
     paid_by: txData.paidBy,
@@ -149,10 +177,12 @@ export const insertTransactionToSupabase = async (txData: any) => {
 // 4. Tasks Sync
 export const fetchLiveTasksFromSupabase = async (coupleId: string) => {
   if (!isSupabaseConfigured() || !coupleId) return [];
+  const validCoupleId = ensureValidUuid(coupleId);
+
   const { data, error } = await supabase
     .from('shared_tasks')
     .select('*')
-    .eq('couple_id', coupleId)
+    .or(`couple_id.eq.${coupleId},couple_id.eq.${validCoupleId}`)
     .order('created_at', { ascending: false });
   if (error) {
     console.error('Supabase tasks fetch error:', error);
@@ -173,9 +203,12 @@ export const fetchLiveTasksFromSupabase = async (coupleId: string) => {
 
 export const insertTaskToSupabase = async (taskData: any) => {
   if (!isSupabaseConfigured()) return null;
+  const validTaskId = ensureValidUuid(taskData.id);
+  const validCoupleId = ensureValidUuid(taskData.coupleId || 'OURA-7782-W');
+
   const dbPayload = {
-    id: taskData.id,
-    couple_id: taskData.coupleId || 'OURA-7782-W',
+    id: validTaskId,
+    couple_id: validCoupleId,
     title: taskData.title,
     description: taskData.description,
     assigned_to: taskData.assignedTo,
@@ -192,10 +225,12 @@ export const insertTaskToSupabase = async (taskData: any) => {
 // 5. Duty Schedule Sync
 export const fetchDutySetupFromSupabase = async (coupleId: string) => {
   if (!isSupabaseConfigured() || !coupleId) return null;
+  const validCoupleId = ensureValidUuid(coupleId);
+
   const { data, error } = await supabase
     .from('duty_schedules')
     .select('*')
-    .eq('couple_id', coupleId)
+    .or(`couple_id.eq.${coupleId},couple_id.eq.${validCoupleId}`)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -215,8 +250,10 @@ export const fetchDutySetupFromSupabase = async (coupleId: string) => {
 
 export const insertDutySetupToSupabase = async (setupData: any) => {
   if (!isSupabaseConfigured()) return null;
+  const validCoupleId = ensureValidUuid(setupData.coupleId || 'OURA-7782-W');
+
   const dbPayload = {
-    couple_id: setupData.coupleId || 'OURA-7782-W',
+    couple_id: validCoupleId,
     day1_date: setupData.day1Date,
     day1_type: setupData.day1Type,
     day2_date: setupData.day2Date,
