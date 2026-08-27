@@ -1,0 +1,16 @@
+{
+  "name": "OURA - Our Life, Our Home, Our Plans",
+  "short_name": "OURA",
+  "description": "A private digital companion for couples building their life together. Reduces the amount of life you keep in your head.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#4F46E5",
+  "theme_color": "#6366F1",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}
