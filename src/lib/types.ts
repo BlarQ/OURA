@@ -69,6 +69,7 @@ export interface Budget {
 
 export interface SavingsGoal {
   id: string;
+  coupleId?: string;
   title: string;
   targetAmount: number;
   currentAmount: number;
@@ -101,6 +102,7 @@ export interface PriceHistoryEntry {
 
 export interface HouseholdItem {
   id: string;
+  coupleId?: string;
   name: string;
   category: 'Living Room' | 'Bedroom' | 'Kitchen' | 'Bathroom' | 'Cleaning' | 'Safety' | 'Workplace Apartment';
   estimatedPrice: number;
@@ -122,6 +124,7 @@ export interface HouseholdItem {
 
 export interface DutyScheduleSetup {
   isConfigured: boolean;
+  coupleId?: string;
   day1Date: string; // YYYY-MM-DD
   day1Type: 'Morning' | 'Night' | 'OFF';
   day2Date: string; // YYYY-MM-DD
@@ -138,6 +141,7 @@ export interface DutyDay {
 
 export interface MenstrualLog {
   id: string;
+  coupleId?: string;
   startDate: string;
   endDate?: string;
   flow: 'light' | 'medium' | 'heavy';
@@ -177,6 +181,7 @@ export interface Meal {
 
 export interface WeeklyMealPlan {
   dayOfWeek: string;
+  coupleId?: string;
   breakfast?: Meal;
   lunch?: Meal;
   dinner?: Meal;
@@ -185,6 +190,7 @@ export interface WeeklyMealPlan {
 
 export interface Task {
   id: string;
+  coupleId?: string;
   title: string;
   description?: string;
   assignedTo: Role | 'both';
@@ -203,6 +209,7 @@ export interface DecisionOption {
 
 export interface Decision {
   id: string;
+  coupleId?: string;
   title: string;
   category: string;
   options: DecisionOption[];
@@ -214,6 +221,7 @@ export interface Decision {
 
 export interface Note {
   id: string;
+  coupleId?: string;
   title: string;
   content: string;
   category: 'Personal' | 'Work' | 'Home' | 'Marriage' | 'Shopping' | 'Ideas';
@@ -226,6 +234,7 @@ export interface Note {
 
 export interface Reminder {
   id: string;
+  coupleId?: string;
   title: string;
   description?: string;
   dueDate: string;
@@ -239,6 +248,7 @@ export interface Reminder {
 
 export interface InventoryItem {
   id: string;
+  coupleId?: string;
   name: string;
   location: string;
   owner: Role | 'shared';
@@ -251,6 +261,7 @@ export interface InventoryItem {
 
 export interface AuditLog {
   id: string;
+  coupleId?: string;
   timestamp: string;
   actorRole: Role;
   action: string;

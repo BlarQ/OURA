@@ -25,8 +25,15 @@ import { calculateDutyDays } from '../lib/dutyEngine';
 import { calculateCyclePrediction } from '../lib/cycleEngine';
 import {
   isSupabaseConfigured,
+  syncProfileToSupabase,
+  fetchLiveTransactionsFromSupabase,
   insertTransactionToSupabase,
-  insertHouseholdItemToSupabase
+  fetchLiveHouseholdItemsFromSupabase,
+  insertHouseholdItemToSupabase,
+  fetchLiveTasksFromSupabase,
+  insertTaskToSupabase,
+  fetchDutySetupFromSupabase,
+  insertDutySetupToSupabase
 } from '../lib/supabaseClient';
 
 interface OuraContextType {
@@ -112,7 +119,7 @@ interface OuraContextType {
 
 const OuraContext = createContext<OuraContextType | undefined>(undefined);
 
-// Helper for Initials Computation (e.g. Collin Ogunlala -> CO)
+// Helper for Initials Computation
 export const getProfileInitials = (name: string): string => {
   if (!name || name.trim() === '') return 'OU';
   const cleanName = name.includes('@') ? name.split('@')[0] : name;
@@ -126,7 +133,6 @@ export const getProfileInitials = (name: string): string => {
   return parts[0][0].toUpperCase();
 };
 
-// Clean Fresh Default User Profiles (Blank & Zero-based for New Registrations)
 const defaultWifeProfile: UserProfile = {
   id: 'usr-wife-live',
   name: 'User',
@@ -205,7 +211,6 @@ export const OuraProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [notes, setNotes] = useState<Note[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   
-  // Unconfigured baseline duty setup for new profiles (persisted locally so husband & wife see exact same schedule!)
   const [dutySetup, setDutySetup] = useState<DutyScheduleSetup>({
     isConfigured: false,
     day1Date: new Date().toISOString().split('T')[0],
@@ -218,7 +223,12 @@ export const OuraProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [quickActionOpen, setQuickActionOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
 
-  // Check Supabase Connection & Persistent Couple Data Sync on mount
+  const activeProfile = currentRole === 'wife' ? wifeProfile : husbandProfile;
+  const partnerProfile = currentRole === 'wife' ? husbandProfile : wifeProfile;
+  const activeSalary = currentRole === 'wife' ? wifeSalary : husbandSalary;
+  const sharedCoupleId = activeProfile.coupleId || wifeProfile.coupleId || husbandProfile.coupleId || 'OURA-7782-W';
+
+  // Check Supabase Connection & Live Remote Sync on mount
   useEffect(() => {
     const configured = isSupabaseConfigured();
     setIsLiveSupabaseConnected(configured);
@@ -258,7 +268,23 @@ export const OuraProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (storedReminders) setReminders(JSON.parse(storedReminders));
       if (storedTx) setTransactions(JSON.parse(storedTx));
     } catch (e) {}
-  }, []);
+
+    // Live Remote Fetch from Supabase Database
+    if (configured && sharedCoupleId) {
+      fetchLiveHouseholdItemsFromSupabase(sharedCoupleId).then((items) => {
+        if (items && items.length > 0) setHouseholdItems(items);
+      });
+      fetchLiveTasksFromSupabase(sharedCoupleId).then((tsks) => {
+        if (tsks && tsks.length > 0) setTasks(tsks);
+      });
+      fetchDutySetupFromSupabase(sharedCoupleId).then((setup) => {
+        if (setup) setDutySetup(setup);
+      });
+      fetchLiveTransactionsFromSupabase(activeProfile.id, sharedCoupleId).then((txs) => {
+        if (txs && txs.length > 0) setTransactions(txs);
+      });
+    }
+  }, [sharedCoupleId]);
 
   const loginUser = (role: Role, keepLoggedIn: boolean) => {
     setCurrentRole(role);
@@ -286,6 +312,7 @@ export const OuraProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('oura_active_role', profile.role);
       localStorage.setItem('oura_user_profile', JSON.stringify(profile));
     } catch (e) {}
+    syncProfileToSupabase(profile);
   };
 
   const updateProfileName = (newName: string) => {
@@ -296,6 +323,7 @@ export const OuraProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           localStorage.setItem('oura_user_profile', JSON.stringify(updated));
         } catch (e) {}
+        syncProfileToSupabase(updated);
         return updated;
       });
     } else {
@@ -304,6 +332,7 @@ export const OuraProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           localStorage.setItem('oura_user_profile', JSON.stringify(updated));
         } catch (e) {}
+        syncProfileToSupabase(updated);
         return updated;
       });
     }
@@ -318,18 +347,17 @@ export const OuraProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!code || code.trim() === '') return false;
     const cleanCode = code.trim().toUpperCase();
     
-    // Link husband and wife profiles together & sync shared data
-    setHusbandProfile((prev) => ({
-      ...prev,
-      coupleId: cleanCode,
-      partnerName: wifeProfile.name || 'Wife'
-    }));
+    setHusbandProfile((prev) => {
+      const updated = { ...prev, coupleId: cleanCode, partnerName: wifeProfile.name || 'Wife' };
+      syncProfileToSupabase(updated);
+      return updated;
+    });
 
-    setWifeProfile((prev) => ({
-      ...prev,
-      coupleId: cleanCode,
-      partnerName: husbandProfile.name || 'Husband'
-    }));
+    setWifeProfile((prev) => {
+      const updated = { ...prev, coupleId: cleanCode, partnerName: husbandProfile.name || 'Husband' };
+      syncProfileToSupabase(updated);
+      return updated;
+    });
 
     confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
     return true;
@@ -343,10 +371,6 @@ export const OuraProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.removeItem('oura_user_profile');
     } catch (e) {}
   };
-
-  const activeProfile = currentRole === 'wife' ? wifeProfile : husbandProfile;
-  const partnerProfile = currentRole === 'wife' ? husbandProfile : wifeProfile;
-  const activeSalary = currentRole === 'wife' ? wifeSalary : husbandSalary;
 
   const updateSalaryProfile = (net: number, employer: string, date: number) => {
     if (currentRole === 'wife') {
@@ -413,12 +437,13 @@ export const OuraProvider: React.FC<{ children: React.ReactNode }> = ({ children
     ]);
   };
 
-  // Finance Actions (Live & Synced)
+  // Finance Actions (Live & Synced with Supabase)
   const addTransaction = (txData: Omit<FinancialTransaction, 'id' | 'userId'>) => {
     const newTx: FinancialTransaction = {
       ...txData,
       id: `tx-${Date.now()}`,
-      userId: activeProfile.id
+      userId: activeProfile.id,
+      coupleId: sharedCoupleId
     };
     setTransactions((prev) => {
       const updated = [newTx, ...prev];
@@ -436,7 +461,7 @@ export const OuraProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const reversal: FinancialTransaction = {
       id: `tx-rev-${Date.now()}`,
       userId: activeProfile.id,
-      coupleId: target.coupleId,
+      coupleId: sharedCoupleId,
       type: target.type === 'debit' ? 'credit' : 'debit',
       amount: target.amount,
       date: new Date().toISOString().split('T')[0],
@@ -463,6 +488,7 @@ export const OuraProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const newGoal: SavingsGoal = {
       ...goal,
       id: `gov-${Date.now()}`,
+      coupleId: sharedCoupleId,
       currentAmount: 0,
       husbandContribution: 0,
       wifeContribution: 0
@@ -498,7 +524,7 @@ export const OuraProvider: React.FC<{ children: React.ReactNode }> = ({ children
     confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
   };
 
-  // Household & Dual Confirmation Workflow (Live & Synced)
+  // Household & Dual Confirmation Workflow (Live & Synced with Supabase)
   const pendingConfirmationItem =
     householdItems.find(
       (item) =>
@@ -509,6 +535,7 @@ export const OuraProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const newItem: HouseholdItem = {
       ...itemData,
       id: `item-${Date.now()}`,
+      coupleId: sharedCoupleId,
       priceHistory: [{ date: new Date().toISOString().split('T')[0], price: itemData.currentPrice, recordedBy: activeProfile.name }]
     };
     setHouseholdItems((prev) => {
@@ -523,20 +550,24 @@ export const OuraProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateItemStatus = (itemId: string, status: HouseholdItem['status'], purchasedBy?: Role) => {
     setHouseholdItems((prev) => {
+      let targetItem: HouseholdItem | null = null;
       const updated = prev.map((item): HouseholdItem => {
         if (item.id === itemId) {
-          return {
+          const mod = {
             ...item,
             status,
             purchasedBy: purchasedBy || item.purchasedBy,
             purchaseDate: status === 'purchased' || status === 'awaiting_confirmation' ? new Date().toISOString().split('T')[0] : item.purchaseDate
           };
+          targetItem = mod;
+          return mod;
         }
         return item;
       });
       try {
         localStorage.setItem('oura_household_repo', JSON.stringify(updated));
       } catch (e) {}
+      if (targetItem) insertHouseholdItemToSupabase(targetItem);
       return updated;
     });
   };
@@ -546,10 +577,19 @@ export const OuraProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!item) return;
 
     setHouseholdItems((prev) => {
-      const updated = prev.map((i): HouseholdItem => (i.id === itemId ? { ...i, status: 'confirmed' } : i));
+      let updatedItem: HouseholdItem | null = null;
+      const updated = prev.map((i): HouseholdItem => {
+        if (i.id === itemId) {
+          const mod = { ...i, status: 'confirmed' as const };
+          updatedItem = mod;
+          return mod;
+        }
+        return i;
+      });
       try {
         localStorage.setItem('oura_household_repo', JSON.stringify(updated));
       } catch (e) {}
+      if (updatedItem) insertHouseholdItemToSupabase(updatedItem);
       return updated;
     });
 
@@ -561,7 +601,7 @@ export const OuraProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (createExpense) {
       addTransaction({
-        coupleId: activeProfile.coupleId,
+        coupleId: sharedCoupleId,
         type: 'debit',
         amount: item.currentPrice,
         date: new Date().toISOString().split('T')[0],
@@ -592,16 +632,17 @@ export const OuraProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const dutyDays = calculateDutyDays(dutySetup, new Date().toISOString().split('T')[0], 30, wifeProfile.husbandWfhDays);
 
   const updateDutySetup = (newSetup: DutyScheduleSetup) => {
-    const updated = { ...newSetup, isConfigured: true };
+    const updated = { ...newSetup, isConfigured: true, coupleId: sharedCoupleId };
     setDutySetup(updated);
     try {
       localStorage.setItem('oura_duty_setup', JSON.stringify(updated));
     } catch (e) {}
+    insertDutySetupToSupabase(updated);
   };
 
   // Menstrual Engine (Synced)
   const addMenstrualLog = (logData: Omit<MenstrualLog, 'id'>) => {
-    const newLog: MenstrualLog = { ...logData, id: `cyc-${Date.now()}` };
+    const newLog: MenstrualLog = { ...logData, id: `cyc-${Date.now()}`, coupleId: sharedCoupleId };
     setMenstrualLogs((prev) => {
       const updated = [newLog, ...prev];
       try {
@@ -618,7 +659,7 @@ export const OuraProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setWeeklyMeals((prev) => {
       const updated = prev.map((p) => {
         if (p.dayOfWeek === dayOfWeek) {
-          return { ...p, [mealType]: meal };
+          return { ...p, [mealType]: meal, coupleId: sharedCoupleId };
         }
         return p;
       });
@@ -629,9 +670,9 @@ export const OuraProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  // Productivity (Live & Synced)
+  // Productivity (Live & Synced with Supabase)
   const addTask = (taskData: Omit<Task, 'id'>) => {
-    const newTask: Task = { ...taskData, id: `tsk-${Date.now()}` };
+    const newTask: Task = { ...taskData, id: `tsk-${Date.now()}`, coupleId: sharedCoupleId };
     setTasks((prev) => {
       const updated = [newTask, ...prev];
       try {
@@ -639,20 +680,25 @@ export const OuraProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (e) {}
       return updated;
     });
+    insertTaskToSupabase(newTask);
   };
 
   const toggleTaskStatus = (taskId: string) => {
     setTasks((prev) => {
+      let modTask: Task | null = null;
       const updated = prev.map((t): Task => {
         if (t.id === taskId) {
           const nextStatus: Task['status'] = t.status === 'completed' ? 'pending' : 'completed';
-          return { ...t, status: nextStatus };
+          const mod = { ...t, status: nextStatus };
+          modTask = mod;
+          return mod;
         }
         return t;
       });
       try {
         localStorage.setItem('oura_tasks_repo', JSON.stringify(updated));
       } catch (e) {}
+      if (modTask) insertTaskToSupabase(modTask);
       return updated;
     });
   };
@@ -686,7 +732,7 @@ export const OuraProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addNote = (noteData: Omit<Note, 'id' | 'createdAt'>) => {
-    const newNote: Note = { ...noteData, id: `not-${Date.now()}`, createdAt: new Date().toISOString().split('T')[0] };
+    const newNote: Note = { ...noteData, id: `not-${Date.now()}`, coupleId: sharedCoupleId, createdAt: new Date().toISOString().split('T')[0] };
     setNotes((prev) => {
       const updated = [newNote, ...prev];
       try {
@@ -711,7 +757,7 @@ export const OuraProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addReminder = (remData: Omit<Reminder, 'id' | 'isCompleted'>) => {
-    const newRem: Reminder = { ...remData, id: `rem-${Date.now()}`, isCompleted: false };
+    const newRem: Reminder = { ...remData, id: `rem-${Date.now()}`, coupleId: sharedCoupleId, isCompleted: false };
     setReminders((prev) => {
       const updated = [newRem, ...prev];
       try {
