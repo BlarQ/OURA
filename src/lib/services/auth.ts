@@ -13,6 +13,43 @@ export interface OnboardingData {
 }
 
 export const authService = {
+  async getCurrentUser(): Promise<{ id: string; email: string; full_name?: string } | null> {
+    if (supabase) {
+      try {
+        const { data } = await supabase.auth.getUser();
+        if (data?.user) {
+          return {
+            id: data.user.id,
+            email: data.user.email || localStore.profile.email,
+            full_name: data.user.user_metadata?.full_name || localStore.profile.full_name,
+          };
+        }
+      } catch (e) {}
+    }
+
+    if (localStore.profile.email && localStore.profile.email !== 'user@oura.app') {
+      return {
+        id: localStore.profile.id,
+        email: localStore.profile.email,
+        full_name: localStore.profile.full_name,
+      };
+    }
+
+    if (typeof window !== 'undefined') {
+      const savedUser = localStorage.getItem('oura_last_active_user');
+      if (savedUser) {
+        try {
+          const parsed = JSON.parse(savedUser);
+          if (parsed && parsed.email) {
+            return parsed;
+          }
+        } catch (e) {}
+      }
+    }
+
+    return null;
+  },
+
   async signUp(email: string, password: string, onboarding: OnboardingData): Promise<{ user: any; profile: UserProfile } | null> {
     clearUserStore();
     const today = new Date().toISOString().split('T')[0];
@@ -50,6 +87,9 @@ export const authService = {
       ];
     }
     saveLocalStore();
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('oura_last_active_user', JSON.stringify({ id: profile.id, email: profile.email, full_name: profile.full_name }));
+    }
 
     if (supabase) {
       try {
@@ -95,18 +135,24 @@ export const authService = {
           }
           loadLocalStore();
           saveLocalStore();
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('oura_last_active_user', JSON.stringify({ id: localStore.profile.id, email: localStore.profile.email, full_name: localStore.profile.full_name }));
+          }
           return true;
         }
       } catch (e) {}
     }
 
-    // Local authentication simulation
+    // Local authentication
     if (email) {
       localStore.profile.email = email;
       localStore.profile.id = `usr_${email.replace(/[^a-zA-Z0-9]/g, '_')}`;
       localStore.profile.full_name = email.split('@')[0].toUpperCase();
       loadLocalStore();
       saveLocalStore();
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('oura_last_active_user', JSON.stringify({ id: localStore.profile.id, email: localStore.profile.email, full_name: localStore.profile.full_name }));
+      }
       return true;
     }
     return false;

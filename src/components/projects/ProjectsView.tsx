@@ -178,7 +178,7 @@ export function ProjectsView() {
                   </div>
                   <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-indigo-600 to-indigo-500 rounded-full transition-all duration-300"
+                      className="h-full bg-linear-to-r from-indigo-600 to-indigo-500 rounded-full transition-all duration-300"
                       style={{ width: `${proj.progress}%` }}
                     />
                   </div>

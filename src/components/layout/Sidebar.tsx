@@ -65,7 +65,7 @@ export function Sidebar() {
             className="w-9 h-9 object-contain group-hover:scale-105 transition-transform duration-200"
           />
           <div>
-            <h1 className="font-[family-name:var(--font-syne)] font-bold text-lg tracking-[0.12em] bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-800 dark:from-white dark:via-indigo-100 dark:to-indigo-300 bg-clip-text text-transparent leading-none">
+            <h1 className="font-(family-name:--font-syne) font-bold text-lg tracking-[0.12em] bg-linear-to-r from-slate-900 via-indigo-900 to-slate-800 dark:from-white dark:via-indigo-100 dark:to-indigo-300 bg-clip-text text-transparent leading-none">
               OURA
             </h1>
             <p className="text-[9px] font-bold text-indigo-600/80 dark:text-indigo-300/80 tracking-[0.16em] uppercase mt-0.5">

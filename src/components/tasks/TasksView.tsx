@@ -192,7 +192,7 @@ export function TasksView() {
                         : 'border-slate-300 dark:border-slate-600 hover:border-indigo-500'
                     }`}
                   >
-                    {task.status === 'Completed' && <CheckSquare className="w-4 h-4 stroke-[3]" />}
+                    {task.status === 'Completed' && <CheckSquare className="w-4 h-4 stroke-3" />}
                   </button>
 
                   <div className="space-y-1.5 flex-1">

@@ -237,7 +237,7 @@ export function NotesView() {
                 {/* Pinned Notes Section */}
                 {pinnedNotes.length > 0 && (
                   <div className="space-y-1 mb-2">
-                    <span className="text-[10px] font-extrabold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider px-3 py-1 block flex items-center gap-1">
+                    <span className="text-[10px] font-extrabold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider px-3 py-1 flex items-center gap-1">
                       <Pin className="w-3 h-3" /> Pinned Notes
                     </span>
                     {pinnedNotes.map((n) => (

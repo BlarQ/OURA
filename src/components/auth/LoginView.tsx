@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, Mail, Lock, ArrowRight, Sparkles } from 'lucide-react';
+import { Mail, Lock, ArrowRight } from 'lucide-react';
 import { authService } from '@/lib/services/auth';
 import { showToast } from '@/components/layout/ConfirmModal';
 
@@ -12,6 +12,16 @@ export function LoginView() {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    async function checkExistingAuth() {
+      const user = await authService.getCurrentUser();
+      if (user && user.email) {
+        router.push('/today');
+      }
+    }
+    checkExistingAuth();
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,14 +39,6 @@ export function LoginView() {
     }
   };
 
-  const handleDemoLogin = async () => {
-    setIsLoading(true);
-    await authService.signIn('demo@oura.app', 'password123');
-    setIsLoading(false);
-    showToast('Signed in with Demo Account!', 'success');
-    router.push('/today');
-  };
-
   return (
     <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-4 relative overflow-hidden select-none">
       {/* Background Ambient Glows */}
@@ -46,10 +48,14 @@ export function LoginView() {
       <div className="w-full max-w-md bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 shadow-2xl space-y-6 relative z-10 animate-scaleUp">
         {/* Brand Logo Header */}
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 text-indigo-400 mb-2">
-            <ShieldCheck className="w-8 h-8" />
-          </div>
-          <h1 className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-white via-indigo-100 to-indigo-300 bg-clip-text text-transparent">
+          <Link href="/" className="inline-block group">
+            <img
+              src="/logo.svg"
+              alt="OURA"
+              className="w-14 h-14 mx-auto mb-2 object-contain group-hover:scale-105 transition-transform duration-200"
+            />
+          </Link>
+          <h1 className="text-2xl font-extrabold tracking-tight bg-linear-to-r from-white via-indigo-100 to-indigo-300 bg-clip-text text-transparent">
             Welcome to OURA
           </h1>
           <p className="text-xs text-slate-400 font-medium">
@@ -99,23 +105,8 @@ export function LoginView() {
           </button>
         </form>
 
-        <div className="relative flex items-center justify-center my-4">
-          <div className="border-t border-slate-800 w-full" />
-          <span className="bg-slate-900 px-3 text-[10px] uppercase font-bold text-slate-500">OR</span>
-        </div>
-
-        {/* Quick Demo Login & Signup CTA */}
-        <div className="space-y-3">
-          <button
-            type="button"
-            onClick={handleDemoLogin}
-            className="w-full py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold border border-slate-700 flex items-center justify-center gap-2 transition-all"
-          >
-            <Sparkles className="w-4 h-4 text-amber-400" />
-            <span>Continue with Demo Account</span>
-          </button>
-
-          <p className="text-center text-xs text-slate-400 pt-2">
+        <div className="border-t border-slate-800/80 pt-4 text-center">
+          <p className="text-xs text-slate-400">
             Don't have an account?{' '}
             <Link href="/signup" className="font-extrabold text-indigo-400 hover:text-indigo-300 underline">
               Create New Account & Set Up

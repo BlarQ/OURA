@@ -83,7 +83,7 @@ export function AppHeader({ onOpenSearch, onOpenQuickCreate }: AppHeaderProps) {
       <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0 pr-2">
         <Link href="/today" className="md:hidden flex items-center gap-2 shrink-0">
           <img src="/logo.svg" alt="OURA" className="w-7 h-7 object-contain" />
-          <span className="font-[family-name:var(--font-syne)] font-bold text-sm text-slate-900 dark:text-white tracking-wider">
+          <span className="font-(family-name:--font-syne) font-bold text-sm text-slate-900 dark:text-white tracking-wider">
             OURA
           </span>
         </Link>

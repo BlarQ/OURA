@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Wallet, ArrowUpRight, ArrowDownRight, ShieldCheck, Plus, Calculator, ChevronRight } from 'lucide-react';
 import { moneyService } from '@/lib/services/money';
 import { formatCurrency } from '@/lib/calculations/money';
-import { AffordabilityCalculator } from './AffordabilityCalculator';
+import { AffordabilityCalculator } from '@/components/money/AffordabilityCalculator';
 
 export function MoneyOverviewView() {
   const [overview, setOverview] = useState({
@@ -42,7 +42,7 @@ export function MoneyOverviewView() {
 
         <button
           onClick={() => setIsAffordabilityOpen(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-extrabold shadow-md active:scale-95 transition-all"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-extrabold shadow-md active:scale-95 transition-all"
         >
           <Calculator className="w-4 h-4" />
           <span>Can I Afford This?</span>
@@ -50,7 +50,7 @@ export function MoneyOverviewView() {
       </div>
 
       {/* Main Balance Card */}
-      <div className="bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-950 rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-emerald-800/60 relative overflow-hidden space-y-6">
+      <div className="bg-linear-to-br from-emerald-900 via-teal-900 to-slate-950 rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-emerald-800/60 relative overflow-hidden space-y-6">
         <div className="space-y-1">
           <span className="text-xs font-bold uppercase tracking-wider text-emerald-300">Available Net Balance</span>
           <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight">

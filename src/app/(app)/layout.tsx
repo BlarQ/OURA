@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { MobileNav } from '@/components/layout/MobileNav';
@@ -9,49 +10,70 @@ import { SearchModal } from '@/components/search/SearchModal';
 import { AlarmBannerModal } from '@/components/layout/AlarmBannerModal';
 import { ConfirmModal } from '@/components/layout/ConfirmModal';
 import { AppTourModal } from '@/components/layout/AppTourModal';
+import { SplashScreen } from '@/components/layout/SplashScreen';
+import { authService } from '@/lib/services/auth';
 import { initAlarmScheduler } from '@/lib/services/alarmScheduler';
 import { requestNotificationPermission } from '@/lib/utils/audio';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
 
   useEffect(() => {
+    async function guardAuth() {
+      const user = await authService.getCurrentUser();
+      if (!user || !user.email) {
+        router.push('/login');
+      } else {
+        setIsAuthChecked(true);
+      }
+    }
+    guardAuth();
+
     requestNotificationPermission();
     const cleanup = initAlarmScheduler();
     return () => {
       if (cleanup) cleanup();
     };
-  }, []);
+  }, [router]);
 
   const handleSelectQuickCreateOption = (type: string) => {
     switch (type) {
       case 'TASK':
-        window.location.href = '/tasks';
+        router.push('/tasks');
         break;
       case 'ACTIVITY':
-        window.location.href = '/activities';
+        router.push('/activities');
         break;
       case 'EXPENSE':
-        window.location.href = '/money/expenses';
+        router.push('/money/expenses');
         break;
       case 'INCOME':
-        window.location.href = '/money/income';
+        router.push('/money/income');
         break;
       case 'PLAN':
-        window.location.href = '/plans';
+        router.push('/plans');
         break;
       case 'REMINDER':
-        window.location.href = '/notifications';
+        router.push('/notifications');
         break;
       case 'NOTE':
-        window.location.href = '/notes';
+        router.push('/notes');
         break;
     }
   };
 
+  if (!isAuthChecked) {
+    return <SplashScreen />;
+  }
+
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-row font-sans selection:bg-indigo-600 selection:text-white">
+      {/* Animated Entrance Splash Screen */}
+      <SplashScreen />
+
       {/* Desktop Sidebar */}
       <Sidebar />
 

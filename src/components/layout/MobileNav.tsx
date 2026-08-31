@@ -49,7 +49,7 @@ export function MobileNav({ onOpenQuickCreate, onOpenMoreMenu }: MobileNavProps)
           <button
             onClick={onOpenQuickCreate}
             aria-label="Quick Create"
-            className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/35 active:scale-95 transition-transform duration-150 border-4 border-slate-50 dark:border-slate-950"
+            className="w-12 h-12 rounded-2xl bg-linear-to-tr from-indigo-600 to-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/35 active:scale-95 transition-transform duration-150 border-4 border-slate-50 dark:border-slate-950"
           >
             <Plus className="w-6 h-6" />
           </button>

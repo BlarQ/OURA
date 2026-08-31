@@ -25,6 +25,12 @@ const syne = Syne({
 export const metadata: Metadata = {
   title: "OURA — Personal Life, Activity, Planning & Salary Management",
   description: "Plan your life. Manage your day. Track your work. Control your money. Achieve your goals.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "OURA",
+  },
   icons: {
     icon: [{ url: "/logo.svg", type: "image/svg+xml" }],
     shortcut: "/logo.svg",
@@ -50,6 +56,19 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} ${syne.variable} antialiased font-sans overflow-x-hidden w-full max-w-full`}
       >
         {children}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').catch(function(err) {
+                    console.warn('SW registration failed: ', err);
+                  });
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );

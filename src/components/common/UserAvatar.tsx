@@ -28,7 +28,7 @@ export function UserAvatar({ fullName = 'User', size = 'md', className = '' }: U
 
   return (
     <div
-      className={`${sizeClasses[size]} rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-indigo-500 text-white flex items-center justify-center shadow-md border border-white/20 select-none tracking-wider shrink-0 ${className}`}
+      className={`${sizeClasses[size]} rounded-2xl bg-linear-to-tr from-indigo-600 via-purple-600 to-indigo-500 text-white flex items-center justify-center shadow-md border border-white/20 select-none tracking-wider shrink-0 ${className}`}
       title={fullName}
     >
       {initials}

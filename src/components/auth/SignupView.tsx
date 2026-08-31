@@ -98,11 +98,11 @@ export function SignupView() {
         {/* Header & Step Indicator Bar */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-indigo-600/20 border border-indigo-500/30 text-indigo-400">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <h1 className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-indigo-100 to-indigo-300 bg-clip-text text-transparent">
+            <div className="flex items-center gap-2.5">
+              <Link href="/">
+                <img src="/logo.svg" alt="OURA" className="w-8 h-8 object-contain hover:scale-105 transition-transform" />
+              </Link>
+              <h1 className="text-xl font-extrabold tracking-tight bg-linear-to-r from-white via-indigo-100 to-indigo-300 bg-clip-text text-transparent">
                 OURA Onboarding
               </h1>
             </div>
@@ -114,7 +114,7 @@ export function SignupView() {
           {/* Progress Bar */}
           <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-300 rounded-full"
+              className="h-full bg-linear-to-r from-indigo-500 to-purple-500 transition-all duration-300 rounded-full"
               style={{ width: `${(currentStep / 4) * 100}%` }}
             />
           </div>
@@ -401,7 +401,7 @@ export function SignupView() {
                 type="button"
                 disabled={isLoading}
                 onClick={handleCompleteSignup}
-                className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-extrabold shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
+                className="flex-1 py-3.5 rounded-2xl bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-extrabold shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
               >
                 <Sparkles className="w-4 h-4 text-amber-300" />
                 <span>{isLoading ? 'Setting Up Workspace...' : 'Complete Setup & Launch OURA'}</span>

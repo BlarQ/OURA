@@ -78,8 +78,8 @@ export function TodayDashboard({ onOpenQuickCreate, onOpenTimer }: TodayDashboar
   return (
     <div className="space-y-8 animate-fadeIn max-w-7xl mx-auto pb-12">
       {/* 1. Header & Welcome Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-indigo-900 via-indigo-800 to-indigo-950 p-6 sm:p-8 rounded-3xl text-white shadow-xl relative overflow-hidden">
-        <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-500/20 via-transparent to-transparent pointer-events-none" />
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-linear-to-r from-indigo-900 via-indigo-800 to-indigo-950 p-6 sm:p-8 rounded-3xl text-white shadow-xl relative overflow-hidden">
+        <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-indigo-500/20 via-transparent to-transparent pointer-events-none" />
 
         <div className="space-y-1 relative z-10">
           <div className="flex items-center gap-2 text-indigo-200 text-xs font-semibold uppercase tracking-wider">
@@ -129,7 +129,7 @@ export function TodayDashboard({ onOpenQuickCreate, onOpenTimer }: TodayDashboar
             </div>
             <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-indigo-600 to-indigo-500 transition-all duration-500 rounded-full"
+                className="h-full bg-linear-to-r from-indigo-600 to-indigo-500 transition-all duration-500 rounded-full"
                 style={{ width: `${taskProgress}%` }}
               />
             </div>
@@ -252,7 +252,7 @@ export function TodayDashboard({ onOpenQuickCreate, onOpenTimer }: TodayDashboar
                             : 'border-slate-300 dark:border-slate-600 hover:border-indigo-500'
                         }`}
                       >
-                        {task.status === 'Completed' && <CheckSquare className="w-3.5 h-3.5 stroke-[3]" />}
+                        {task.status === 'Completed' && <CheckSquare className="w-3.5 h-3.5 stroke-3" />}
                       </button>
                       <div className="space-y-1 flex-1 min-w-0">
                         <span

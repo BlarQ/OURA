@@ -51,7 +51,7 @@ export function AlarmBannerModal() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-      <div className="bg-gradient-to-b from-indigo-900 to-slate-900 text-white rounded-3xl max-w-md w-full p-6 shadow-2xl border-2 border-indigo-500 space-y-6 text-center animate-bounce-subtle">
+      <div className="bg-linear-to-b from-indigo-900 to-slate-900 text-white rounded-3xl max-w-md w-full p-6 shadow-2xl border-2 border-indigo-500 space-y-6 text-center animate-bounce-subtle">
         
         {/* Pulsing Alarm Icon */}
         <div className="relative w-20 h-20 mx-auto flex items-center justify-center">
