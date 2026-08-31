@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Outfit, Syne } from "next/font/google";
 import "./globals.css";
-import { OuraProvider } from "../context/OuraContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,36 +12,44 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const outfit = Outfit({
+  variable: "--font-outfit",
+  subsets: ["latin"],
+});
+
+const syne = Syne({
+  variable: "--font-syne",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
-  title: "OURA - Our Life, Our Home, Our Plans",
-  description: "A private digital companion for engaged and married couples building their life together.",
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: "OURA"
-  }
+  title: "OURA — Personal Life, Activity, Planning & Salary Management",
+  description: "Plan your life. Manage your day. Track your work. Control your money. Achieve your goals.",
+  icons: {
+    icon: [{ url: "/logo.svg", type: "image/svg+xml" }],
+    shortcut: "/logo.svg",
+    apple: "/logo.svg",
+  },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#6366F1",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col bg-slate-100 text-slate-900">
-        <OuraProvider>{children}</OuraProvider>
+    <html lang="en" className="overflow-x-hidden">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} ${syne.variable} antialiased font-sans overflow-x-hidden w-full max-w-full`}
+      >
+        {children}
       </body>
     </html>
   );

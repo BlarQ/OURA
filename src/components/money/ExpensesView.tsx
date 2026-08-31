@@ -1,0 +1,193 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { DollarSign, Plus, ArrowDownRight } from 'lucide-react';
+import { ExpenseRecord, ExpenseCategory, PaymentMethod } from '@/types';
+import { moneyService } from '@/lib/services/money';
+import { formatCurrency } from '@/lib/calculations/money';
+
+export function ExpensesView() {
+  const [expenses, setExpenses] = useState<ExpenseRecord[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [description, setDescription] = useState('');
+  const [amount, setAmount] = useState('');
+  const [category, setCategory] = useState<ExpenseCategory>('Food');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Debit Card');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+
+  const loadExpenses = async () => {
+    const list = await moneyService.getExpenseRecords();
+    setExpenses(list);
+  };
+
+  useEffect(() => {
+    loadExpenses();
+  }, []);
+
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const amt = parseFloat(amount);
+    if (!description || isNaN(amt) || amt <= 0) return;
+
+    await moneyService.addExpense({
+      description,
+      amount: amt,
+      category,
+      date,
+      payment_method: paymentMethod,
+    });
+
+    setDescription('');
+    setAmount('');
+    setIsModalOpen(false);
+    await loadExpenses();
+  };
+
+  return (
+    <div className="space-y-6 max-w-7xl mx-auto pb-16 animate-fadeIn">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <DollarSign className="w-6 h-6 text-rose-600 dark:text-rose-400" />
+            Expense Management
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Fast expense logging, categorized debits, and budget tracking
+          </p>
+        </div>
+
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-md active:scale-95 transition-all"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Add Expense</span>
+        </button>
+      </div>
+
+      <div className="space-y-3">
+        {expenses.map((exp) => (
+          <div
+            key={exp.id}
+            className="p-4.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950 text-rose-600">
+                <ArrowDownRight className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-slate-900 dark:text-white text-sm">{exp.description || exp.category}</h3>
+                <span className="text-xs text-slate-500 font-medium">Category: {exp.category} • Method: {exp.payment_method} • Date: {exp.date}</span>
+              </div>
+            </div>
+
+            <span className="text-base font-extrabold text-rose-600 dark:text-rose-400">
+              -{formatCurrency(exp.amount)}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">Add Expense</h2>
+            <form onSubmit={handleAdd} className="space-y-3">
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Description *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Lunch with team, Groceries"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Amount (₦) *</label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    placeholder="12500"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Category</label>
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value as any)}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none"
+                  >
+                    <option value="Food">Food</option>
+                    <option value="Transport">Transport</option>
+                    <option value="Rent">Rent</option>
+                    <option value="Housing">Housing</option>
+                    <option value="Electricity">Electricity</option>
+                    <option value="Water">Water</option>
+                    <option value="Airtime">Airtime</option>
+                    <option value="Internet">Internet</option>
+                    <option value="Shopping">Shopping</option>
+                    <option value="Family">Family</option>
+                    <option value="Healthcare">Healthcare</option>
+                    <option value="Subscriptions">Subscriptions</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Payment Method</label>
+                  <select
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value as any)}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none"
+                  >
+                    <option value="Debit Card">Debit Card</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="Cash">Cash</option>
+                    <option value="POS">POS</option>
+                    <option value="Mobile Payment">Mobile Payment</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Date *</label>
+                  <input
+                    type="date"
+                    required
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-500"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-rose-600 text-white text-xs font-extrabold shadow-md"
+                >
+                  Save Expense
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
