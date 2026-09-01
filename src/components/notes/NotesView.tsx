@@ -191,7 +191,7 @@ export function NotesView() {
       </div>
 
       {/* Main Notepad Application Split View */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[720px]">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-180">
         {/* Left Column: Notes List Sidebar */}
         <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col overflow-hidden">
           {/* Search & Category Filter */}
@@ -394,7 +394,7 @@ export function NotesView() {
                   placeholder="Write your note, thoughts, or draft messages here..."
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  className="flex-1 w-full bg-transparent text-sm text-slate-800 dark:text-slate-200 leading-relaxed focus:outline-none resize-none placeholder:text-slate-300 dark:placeholder:text-slate-600 min-h-[400px]"
+                  className="flex-1 w-full bg-transparent text-sm text-slate-800 dark:text-slate-200 leading-relaxed focus:outline-none resize-none placeholder:text-slate-300 dark:placeholder:text-slate-600 min-h-100"
                 />
               </div>
             </>
