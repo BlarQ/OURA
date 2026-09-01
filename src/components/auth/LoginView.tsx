@@ -34,11 +34,19 @@ export function LoginView() {
       const checkStandaloneMode = () => {
         const standalone =
           window.matchMedia('(display-mode: standalone)').matches ||
+          window.matchMedia('(display-mode: minimal-ui)').matches ||
+          window.matchMedia('(display-mode: fullscreen)').matches ||
           (window.navigator as unknown as { standalone?: boolean }).standalone === true ||
           document.referrer.includes('android-app://');
         setIsStandalone(Boolean(standalone));
       };
       checkStandaloneMode();
+
+      const mediaQuery = window.matchMedia('(display-mode: standalone)');
+      const handleMediaChange = (e: MediaQueryListEvent) => {
+        if (e.matches) setIsStandalone(true);
+      };
+      mediaQuery.addEventListener('change', handleMediaChange);
 
       const handleBeforeInstallPrompt = (e: Event) => {
         e.preventDefault();
@@ -56,6 +64,7 @@ export function LoginView() {
       window.addEventListener('appinstalled', handleAppInstalled);
 
       return () => {
+        mediaQuery.removeEventListener('change', handleMediaChange);
         window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
         window.removeEventListener('appinstalled', handleAppInstalled);
       };
@@ -180,14 +189,16 @@ export function LoginView() {
 
       </div>
 
-      <button
-        type="button"
-        onClick={handleInstallPwa}
-        className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-indigo-300 border border-slate-800 hover:border-indigo-500/40 text-xs font-bold transition-all shadow-lg hover:shadow-indigo-500/10 cursor-pointer active:scale-95 relative z-10"
-      >
-        <Download className="w-3.5 h-3.5 text-indigo-400" />
-        <span>{isStandalone ? '' : 'Download / Install PWA'}</span>
-      </button>
+      {!isStandalone && (
+        <button
+          type="button"
+          onClick={handleInstallPwa}
+          className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-indigo-300 border border-slate-800 hover:border-indigo-500/40 text-xs font-bold transition-all shadow-lg hover:shadow-indigo-500/10 cursor-pointer active:scale-95 relative z-10"
+        >
+          <Download className="w-3.5 h-3.5 text-indigo-400" />
+          <span>Download / Install PWA</span>
+        </button>
+      )}
 
       {/* Global PWA Installation & Toast Notification Modals */}
       <PwaInstallModal />
