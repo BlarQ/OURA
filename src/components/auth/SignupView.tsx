@@ -80,6 +80,7 @@ export function SignupView() {
     if (res) {
       if (typeof window !== 'undefined') {
         localStorage.setItem('oura_show_app_tour', 'true');
+        localStorage.setItem('oura_show_pwa_prompt', 'true');
       }
       showToast('Account setup completed! Welcome to OURA.', 'success');
       router.push('/today');

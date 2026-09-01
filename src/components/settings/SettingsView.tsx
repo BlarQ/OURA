@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Settings, Download, Trash2, ShieldAlert, User, DollarSign, FileText, Sparkles, RotateCcw } from 'lucide-react';
+import { Settings, Download, Trash2, ShieldAlert, User, DollarSign, FileText, Sparkles, RotateCcw, Smartphone } from 'lucide-react';
 import { localStore } from '@/lib/supabase/client';
 import { moneyService } from '@/lib/services/money';
 import { formatCurrency } from '@/lib/calculations/money';
@@ -16,6 +16,12 @@ export function SettingsView() {
   const handleStartTour = () => {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('oura_start_app_tour'));
+    }
+  };
+
+  const handleOpenPwaGuide = () => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('oura_open_pwa_install'));
     }
   };
 
@@ -111,13 +117,23 @@ export function SettingsView() {
           </p>
         </div>
 
-        <button
-          onClick={handleStartTour}
-          className="px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold shadow-md flex items-center gap-2 transition-all active:scale-95 self-start sm:self-auto"
-        >
-          <Sparkles className="w-4 h-4 text-amber-300" />
-          <span>Restart App Tour</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          <button
+            onClick={handleOpenPwaGuide}
+            className="px-4 py-2.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 text-xs font-extrabold shadow-sm flex items-center gap-2 transition-all active:scale-95"
+          >
+            <Smartphone className="w-4 h-4 text-indigo-500" />
+            <span>Install / PWA Guide</span>
+          </button>
+
+          <button
+            onClick={handleStartTour}
+            className="px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold shadow-md flex items-center gap-2 transition-all active:scale-95"
+          >
+            <Sparkles className="w-4 h-4 text-amber-300" />
+            <span>Restart App Tour</span>
+          </button>
+        </div>
       </div>
 
       {/* Profile Form */}
@@ -192,6 +208,29 @@ export function SettingsView() {
             </button>
           </div>
         </form>
+      </div>
+
+      {/* PWA & Mobile App Setup Card */}
+      <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h2 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+              <Smartphone className="w-5 h-5 text-indigo-500" />
+              PWA & Mobile App Installation
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Install OURA directly to your iPhone, Android, or PC/Mac desktop for fast offline access and shift reminders.
+            </p>
+          </div>
+
+          <button
+            onClick={handleOpenPwaGuide}
+            className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold shadow-md flex items-center gap-2 transition-all active:scale-95 self-start sm:self-auto shrink-0"
+          >
+            <Smartphone className="w-4 h-4 text-amber-300" />
+            <span>Open Install Guide</span>
+          </button>
+        </div>
       </div>
 
       {/* Data Export Card */}

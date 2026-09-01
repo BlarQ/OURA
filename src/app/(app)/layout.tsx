@@ -10,6 +10,7 @@ import { SearchModal } from '@/components/search/SearchModal';
 import { AlarmBannerModal } from '@/components/layout/AlarmBannerModal';
 import { ConfirmModal } from '@/components/layout/ConfirmModal';
 import { AppTourModal } from '@/components/layout/AppTourModal';
+import { PwaInstallModal } from '@/components/layout/PwaInstallModal';
 import { SplashScreen } from '@/components/layout/SplashScreen';
 import { authService } from '@/lib/services/auth';
 import { initAlarmScheduler } from '@/lib/services/alarmScheduler';
@@ -115,6 +116,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Interactive 5-Step App Tour Modal */}
       <AppTourModal />
+
+      {/* PWA Welcome & Installation Guide Modal */}
+      <PwaInstallModal />
     </div>
   );
 }
