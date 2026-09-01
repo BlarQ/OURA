@@ -3,15 +3,23 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, ArrowRight } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Download } from 'lucide-react';
 import { authService } from '@/lib/services/auth';
-import { showToast } from '@/components/layout/ConfirmModal';
+import { showToast, ConfirmModal } from '@/components/layout/ConfirmModal';
+import { PwaInstallModal } from '@/components/layout/PwaInstallModal';
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+}
 
 export function LoginView() {
   const router = useRouter();
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isStandalone, setIsStandalone] = useState<boolean>(false);
 
   useEffect(() => {
     async function checkExistingAuth() {
@@ -21,7 +29,61 @@ export function LoginView() {
       }
     }
     checkExistingAuth();
+
+    if (typeof window !== 'undefined') {
+      const checkStandaloneMode = () => {
+        const standalone =
+          window.matchMedia('(display-mode: standalone)').matches ||
+          (window.navigator as unknown as { standalone?: boolean }).standalone === true ||
+          document.referrer.includes('android-app://');
+        setIsStandalone(Boolean(standalone));
+      };
+      checkStandaloneMode();
+
+      const handleBeforeInstallPrompt = (e: Event) => {
+        e.preventDefault();
+        setDeferredPrompt(e as BeforeInstallPromptEvent);
+      };
+
+      window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+      const handleAppInstalled = () => {
+        setIsStandalone(true);
+        setDeferredPrompt(null);
+        showToast('OURA PWA installed successfully!', 'success');
+      };
+
+      window.addEventListener('appinstalled', handleAppInstalled);
+
+      return () => {
+        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        window.removeEventListener('appinstalled', handleAppInstalled);
+      };
+    }
   }, [router]);
+
+  const handleInstallPwa = async () => {
+    if (isStandalone) {
+      showToast('OURA App is already installed and running!', 'info');
+      return;
+    }
+
+    if (deferredPrompt) {
+      try {
+        await deferredPrompt.prompt();
+        const choiceResult = await deferredPrompt.userChoice;
+        if (choiceResult.outcome === 'accepted') {
+          showToast('Installing OURA PWA...', 'success');
+        }
+        setDeferredPrompt(null);
+      } catch (err) {
+        console.error(err);
+        window.dispatchEvent(new CustomEvent('oura_open_pwa_install'));
+      }
+    } else {
+      window.dispatchEvent(new CustomEvent('oura_open_pwa_install'));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +102,7 @@ export function LoginView() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-4 relative overflow-hidden select-none">
+    <div className="min-h-screen bg-slate-950 text-white flex flex-col gap-4 items-center justify-center p-4 relative overflow-hidden select-none">
       {/* Background Ambient Glows */}
       <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
@@ -115,7 +177,21 @@ export function LoginView() {
             </Link>
           </p>
         </div>
+
       </div>
+
+      <button
+        type="button"
+        onClick={handleInstallPwa}
+        className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-indigo-300 border border-slate-800 hover:border-indigo-500/40 text-xs font-bold transition-all shadow-lg hover:shadow-indigo-500/10 cursor-pointer active:scale-95 relative z-10"
+      >
+        <Download className="w-3.5 h-3.5 text-indigo-400" />
+        <span>{isStandalone ? '' : 'Download / Install PWA'}</span>
+      </button>
+
+      {/* Global PWA Installation & Toast Notification Modals */}
+      <PwaInstallModal />
+      <ConfirmModal />
     </div>
   );
 }
