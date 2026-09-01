@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   CheckSquare, Plus, Search, Filter, Clock, AlertCircle, ChevronDown,
-  Trash2, Bell, RefreshCw
+  Trash2, Bell, RefreshCw, X
 } from 'lucide-react';
 import { Task, TaskPriority, TaskStatus } from '@/types';
 import { taskService } from '@/lib/services/tasks';
@@ -294,62 +294,72 @@ export function TasksView() {
 
       {/* Task Creation Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5 animate-scaleUp">
-            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">Create New Task</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-4 sm:p-5 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-3 animate-scaleUp max-h-[96vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-1 border-b border-slate-100 dark:border-slate-800/80">
+              <h2 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">Create New Task</h2>
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
-            <form onSubmit={handleCreateTask} className="space-y-4">
+            <form onSubmit={handleCreateTask} className="space-y-2.5">
               <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Title *</label>
+                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-0.5">Title *</label>
                 <input
                   type="text"
                   required
                   placeholder="Task title"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs font-medium border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs font-medium border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Description</label>
-                <textarea
-                  rows={2}
-                  placeholder="Task details"
+                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-0.5">Description</label>
+                <input
+                  type="text"
+                  placeholder="Task details (optional)"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs font-medium border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs font-medium border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
 
-              <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Assign to Project (Optional)</label>
-                <select
-                  value={formData.project_id || ''}
-                  onChange={(e) => {
-                    const selectedProj = projects.find((p) => p.id === e.target.value);
-                    setFormData({
-                      ...formData,
-                      project_id: e.target.value,
-                      project_name: selectedProj ? selectedProj.name : '',
-                    });
-                  }}
-                  className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs font-medium border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none"
-                >
-                  <option value="">None (Standalone Task)</option>
-                  {projects.map((p) => (
-                    <option key={p.id} value={p.id}>📁 {p.name}</option>
-                  ))}
-                </select>
-              </div>
+              <div className="grid grid-cols-2 gap-2.5">
+                <div className="min-w-0">
+                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-0.5">Assign to Project</label>
+                  <select
+                    value={formData.project_id || ''}
+                    onChange={(e) => {
+                      const selectedProj = projects.find((p) => p.id === e.target.value);
+                      setFormData({
+                        ...formData,
+                        project_id: e.target.value,
+                        project_name: selectedProj ? selectedProj.name : '',
+                      });
+                    }}
+                    className="w-full px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs font-medium border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none"
+                  >
+                    <option value="">None (Standalone)</option>
+                    {projects.map((p) => (
+                      <option key={p.id} value={p.id}>📁 {p.name}</option>
+                    ))}
+                  </select>
+                </div>
 
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Priority</label>
+                <div className="min-w-0">
+                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-0.5">Priority</label>
                   <select
                     value={formData.priority}
                     onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
-                    className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs font-medium border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none"
+                    className="w-full px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs font-medium border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none"
                   >
                     <option value="Low">Low</option>
                     <option value="Medium">Medium</option>
@@ -357,90 +367,92 @@ export function TasksView() {
                     <option value="Urgent">Urgent</option>
                   </select>
                 </div>
+              </div>
 
-                <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Due Date *</label>
+              <div className="grid grid-cols-2 gap-2.5">
+                <div className="min-w-0">
+                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-0.5">Due Date *</label>
                   <input
                     type="date"
                     required
                     value={formData.due_date}
                     onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs font-medium border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none"
+                    className="w-full px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs font-medium border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
 
-                <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Alarm Time *</label>
+                <div className="min-w-0">
+                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-0.5">Alarm Time *</label>
                   <input
                     type="time"
                     required
                     value={formData.due_time}
                     onChange={(e) => setFormData({ ...formData, due_time: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs font-medium border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none"
+                    className="w-full px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs font-medium border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
               </div>
 
               {/* Notification & Audio Alarm Settings */}
-              <div className="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900 space-y-3">
+              <div className="p-2.5 sm:p-3 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900 space-y-2">
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="text-xs font-bold text-indigo-900 dark:text-indigo-200 block">Enable Push &amp; Ringtone Alarm</span>
-                    <span className="text-[11px] text-indigo-600 dark:text-indigo-400">Desktop popup notification &amp; ringtone sound chime</span>
+                    <span className="text-[10px] text-indigo-600 dark:text-indigo-400">Desktop popup notification &amp; ringtone sound chime</span>
                   </div>
                   <input
                     type="checkbox"
                     checked={formData.notification_enabled}
                     onChange={(e) => setFormData({ ...formData, notification_enabled: e.target.checked })}
-                    className="w-5 h-5 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                    className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                   />
                 </div>
 
                 {formData.notification_enabled && (
-                  <div className="grid grid-cols-2 gap-3 pt-2 border-t border-indigo-100 dark:border-indigo-900/60">
-                    <div>
-                      <label className="text-[11px] font-bold text-indigo-900 dark:text-indigo-200 block mb-1">Reminder Timing</label>
+                  <div className="grid grid-cols-2 gap-2 pt-1.5 border-t border-indigo-100 dark:border-indigo-900/60">
+                    <div className="min-w-0">
+                      <label className="text-[10px] font-bold text-indigo-900 dark:text-indigo-200 block mb-0.5">Reminder Timing</label>
                       <select
                         value={formData.reminder_time}
                         onChange={(e) => setFormData({ ...formData, reminder_time: e.target.value })}
-                        className="w-full px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 text-xs font-semibold border border-indigo-200 dark:border-indigo-800 text-slate-900 dark:text-white focus:outline-none"
+                        className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-slate-900 text-[11px] font-semibold border border-indigo-200 dark:border-indigo-800 text-slate-900 dark:text-white focus:outline-none truncate"
                       >
                         <option value="At time of event">At time of event</option>
-                        <option value="5 minutes before">5 minutes before</option>
-                        <option value="15 minutes before">15 minutes before</option>
-                        <option value="30 minutes before">30 minutes before</option>
-                        <option value="1 hour before">1 hour before</option>
+                        <option value="5 minutes before">5 mins before</option>
+                        <option value="15 minutes before">15 mins before</option>
+                        <option value="30 minutes before">30 mins before</option>
+                        <option value="1 hour before">1 hr before</option>
                       </select>
                     </div>
 
-                    <div className="flex items-end">
+                    <div className="flex items-end min-w-0">
                       <button
                         type="button"
                         onClick={async () => {
                           const { playAlarmSound } = await import('@/lib/utils/audio');
                           playAlarmSound();
                         }}
-                        className="w-full px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm transition-colors flex items-center justify-center gap-1.5"
+                        className="w-full px-2 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold shadow-sm transition-colors flex items-center justify-center gap-1 active:scale-95 shrink-0"
                       >
-                        <Bell className="w-3.5 h-3.5" />
-                        <span>Test Ringtone</span>
+                        <Bell className="w-3 h-3 shrink-0" />
+                        <span className="truncate">Test Ringtone</span>
                       </button>
                     </div>
                   </div>
                 )}
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3">
+              <div className="flex items-center justify-end gap-2 pt-1">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold shadow-md shadow-indigo-500/20"
+                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold shadow-md shadow-indigo-500/20 active:scale-95 transition-all"
                 >
                   Save Task
                 </button>

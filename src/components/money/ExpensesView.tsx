@@ -195,14 +195,14 @@ export function ExpensesView() {
                     <option value="Mobile Payment">Mobile Payment</option>
                   </select>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Date *</label>
                   <input
                     type="date"
                     required
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
               </div>
