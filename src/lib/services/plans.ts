@@ -12,7 +12,17 @@ export const planService = {
           .select('*, items:plan_items(*)')
           .order('created_at', { ascending: false });
         if (!error && data) {
-          dbPlans = data.map((plan) => this.enrichPlan(plan as any));
+          dbPlans = data.map((plan: any) => {
+            const localPlan = localStore.plans.find((lp) => lp.id === plan.id);
+            const dbItems = plan.items || [];
+            const dbItemIds = new Set(dbItems.map((i: any) => i.id));
+            const localOnlyItems = (localPlan?.items || []).filter((i: any) => !dbItemIds.has(i.id));
+            const allItems = [...dbItems, ...localOnlyItems];
+            return this.enrichPlan({
+              ...plan,
+              items: allItems,
+            });
+          });
         }
       } catch (e) {}
     }
@@ -32,17 +42,27 @@ export const planService = {
 
   enrichPlan(plan: Plan): Plan {
     const items = plan.items || [];
-    const totalEstimated = items.reduce((sum, item) => sum + (item.estimated_amount * (item.quantity || 1)), 0);
+    const totalEstimated = items.reduce((sum, item) => sum + ((Number(item.estimated_amount) || 0) * (item.quantity || 1)), 0);
     const totalActual = items
       .filter((item) => item.status === 'Purchased' || item.status === 'Completed')
-      .reduce((sum, item) => sum + ((item.actual_amount || item.estimated_amount) * (item.quantity || 1)), 0);
+      .reduce((sum, item) => sum + (((Number(item.actual_amount) || Number(item.estimated_amount)) || 0) * (item.quantity || 1)), 0);
 
+    const budget = Number(plan.budget) || 0;
     const purchasedCount = items.filter((i) => i.status === 'Purchased' || i.status === 'Completed').length;
-    const progress = items.length > 0 ? Math.round((purchasedCount / items.length) * 100) : 0;
+
+    let progress = 0;
+    if (budget > 0) {
+      progress = Math.min(100, Math.round((totalActual / budget) * 100));
+    } else if (totalEstimated > 0) {
+      progress = Math.min(100, Math.round((totalActual / totalEstimated) * 100));
+    } else if (items.length > 0) {
+      progress = Math.round((purchasedCount / items.length) * 100);
+    }
 
     return {
       ...plan,
       items,
+      budget,
       total_estimated: totalEstimated,
       total_actual: totalActual,
       progress,
@@ -79,10 +99,10 @@ export const planService = {
         if (!error && planData) {
           const index = localStore.plans.findIndex((p) => p.id === newPlan.id);
           if (index !== -1) {
-            localStore.plans[index] = { ...newPlan, ...planData };
+            localStore.plans[index] = { ...newPlan, ...planData, items: newPlan.items };
             saveLocalStore();
           }
-          return this.enrichPlan({ ...newPlan, ...planData });
+          return this.enrichPlan({ ...newPlan, ...planData, items: newPlan.items });
         }
       } catch (e) {}
     }
@@ -100,10 +120,19 @@ export const planService = {
       updated_at: today,
     };
 
-    const plan = localStore.plans.find((p) => p.id === planId);
+    let plan = localStore.plans.find((p) => p.id === planId);
+    if (!plan) {
+      const allPlans = await this.getPlans();
+      const matched = allPlans.find((p) => p.id === planId);
+      if (matched) {
+        plan = { ...matched, items: [...(matched.items || [])] };
+        localStore.plans.push(plan);
+      }
+    }
+
     if (plan) {
       if (!plan.items) plan.items = [];
-      plan.items.push(newItem);
+      plan.items.unshift(newItem);
       plan.updated_at = today;
       saveLocalStore();
     }
@@ -112,11 +141,34 @@ export const planService = {
       try {
         const { data, error } = await supabase
           .from('plan_items')
-          .insert([{ ...itemData, plan_id: planId }])
+          .insert([{
+            plan_id: planId,
+            name: itemData.name,
+            estimated_amount: itemData.estimated_amount || 0,
+            actual_amount: itemData.actual_amount || 0,
+            quantity: itemData.quantity || 1,
+            priority: itemData.priority || 'Medium',
+            status: itemData.status || 'Planned',
+            category: itemData.category || 'General',
+          }])
           .select('*')
           .single();
-        if (!error && data) return data as any;
-      } catch (e) {}
+
+        if (!error && data) {
+          if (plan && plan.items) {
+            const idx = plan.items.findIndex((i) => i.id === newItem.id);
+            if (idx !== -1) {
+              plan.items[idx] = data as any;
+              saveLocalStore();
+            }
+          }
+          return data as any;
+        } else if (error) {
+          console.warn('Supabase plan_items insert error:', error);
+        }
+      } catch (e) {
+        console.warn('Supabase plan_items exception:', e);
+      }
     }
 
     return newItem;

@@ -243,6 +243,15 @@ export interface SavingsGoal {
 
 export type GoalCategory = 'Financial' | 'Career' | 'Personal' | 'Learning' | 'Project' | 'Travel' | 'Other';
 
+export interface GoalDeposit {
+  id: string;
+  goal_id: string;
+  amount: number;
+  date: string;
+  note?: string;
+  created_at: string;
+}
+
 export interface Goal {
   id: string;
   user_id: string;
@@ -250,6 +259,12 @@ export interface Goal {
   description?: string;
   category: GoalCategory;
   target_date?: string;
+  start_date?: string;
+  target_amount?: number;
+  current_amount?: number;
+  duration_months?: number;
+  saving_frequency?: 'Daily' | 'Weekly' | 'Bi-Weekly' | 'Monthly';
+  deposits?: GoalDeposit[];
   status: 'Not Started' | 'In Progress' | 'Achieved' | 'On Hold';
   progress: number;
   created_at: string;

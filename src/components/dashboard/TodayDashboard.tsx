@@ -498,8 +498,18 @@ export function TodayDashboard({ onOpenQuickCreate, onOpenTimer }: TodayDashboar
                     <span className="font-bold text-slate-900 dark:text-white">{goal.title}</span>
                     <span className="font-extrabold text-indigo-600 dark:text-indigo-400">{goal.progress}%</span>
                   </div>
+                  {goal.target_amount && goal.target_amount > 0 ? (
+                    <div className="flex items-center justify-between text-[11px] font-semibold">
+                      <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                        {formatCurrency(goal.current_amount || 0)} saved
+                      </span>
+                      <span className="text-slate-500 dark:text-slate-400">
+                        {formatCurrency(Math.max(0, goal.target_amount - (goal.current_amount || 0)))} left
+                      </span>
+                    </div>
+                  ) : null}
                   <div className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                    <div className="h-full bg-indigo-600 rounded-full" style={{ width: `${goal.progress}%` }} />
+                    <div className="h-full bg-linear-to-r from-emerald-500 to-indigo-600 rounded-full transition-all duration-300" style={{ width: `${goal.progress}%` }} />
                   </div>
                 </div>
               ))}

@@ -1,12 +1,12 @@
-'use client';
-
 import React, { useState, useEffect } from 'react';
-import { Bell, ShieldCheck, Check } from 'lucide-react';
+import { Bell, ShieldCheck, Check, Plus } from 'lucide-react';
 import { Notification, NotificationPreferences } from '@/types';
 import { notificationService } from '@/lib/services/notifications';
+import { CreateReminderModal } from './CreateReminderModal';
 
 export function NotificationsView() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [prefs, setPrefs] = useState<NotificationPreferences>({
     user_id: 'usr_01',
     task_reminders: true,
@@ -21,14 +21,22 @@ export function NotificationsView() {
     monthly_review: true,
   });
 
+  const loadNotifs = async () => {
+    const list = await notificationService.getNotifications();
+    setNotifications(list);
+    const p = await notificationService.getPreferences();
+    setPrefs(p);
+  };
+
   useEffect(() => {
-    async function loadNotifs() {
-      const list = await notificationService.getNotifications();
-      setNotifications(list);
-      const p = await notificationService.getPreferences();
-      setPrefs(p);
-    }
     loadNotifs();
+
+    const handleReminderCreated = () => {
+      loadNotifs();
+    };
+
+    window.addEventListener('oura_reminder_created', handleReminderCreated);
+    return () => window.removeEventListener('oura_reminder_created', handleReminderCreated);
   }, []);
 
   const handleTogglePref = async (key: keyof NotificationPreferences) => {
@@ -38,14 +46,24 @@ export function NotificationsView() {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-16 animate-fadeIn">
-      <div>
-        <h1 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-          <Bell className="w-5 h-5 text-indigo-600 dark:text-indigo-400 shrink-0" />
-          <span>Notification Center & Preferences</span>
-        </h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-          Manage task alerts, bill reminders, and alert notification preferences
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <Bell className="w-5 h-5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+            <span>Notification Center & Preferences</span>
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Manage task alerts, bill reminders, and alert notification preferences
+          </p>
+        </div>
+
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md active:scale-95 transition-all self-start sm:self-auto"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Set Reminder</span>
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -95,6 +113,13 @@ export function NotificationsView() {
           </div>
         </div>
       </div>
+
+      {/* Create Reminder Modal */}
+      <CreateReminderModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={loadNotifs}
+      />
     </div>
   );
 }

@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Compass, Plus, CheckCircle, AlertTriangle, ShoppingBag, Clock } from 'lucide-react';
+import { Compass, Plus, CheckCircle, AlertTriangle, ShoppingBag, Clock, X } from 'lucide-react';
 import { Plan, PlanItem } from '@/types';
 import { planService } from '@/lib/services/plans';
 import { formatCurrency } from '@/lib/calculations/money';
 import { PurchasedModal } from './PurchasedModal';
+import { showToast } from '@/components/layout/ConfirmModal';
 
 export function PlansView() {
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -19,12 +20,16 @@ export function PlansView() {
   const [planBudget, setPlanBudget] = useState('');
   const [itemName, setItemName] = useState('');
   const [itemEstAmount, setItemEstAmount] = useState('');
+  const [itemCategory, setItemCategory] = useState('General');
+  const [itemQuantity, setItemQuantity] = useState('1');
 
   const loadPlans = async () => {
     const list = await planService.getPlans();
     setPlans(list);
-    if (list.length > 0 && !activePlanId) {
-      setActivePlanId(list[0].id);
+    if (list.length > 0) {
+      if (!activePlanId || !list.some((p) => p.id === activePlanId)) {
+        setActivePlanId(list[0].id);
+      }
     }
   };
 
@@ -38,7 +43,7 @@ export function PlansView() {
     e.preventDefault();
     if (!planName.trim()) return;
 
-    await planService.createPlan({
+    const created = await planService.createPlan({
       name: planName.trim(),
       budget: parseFloat(planBudget) || 0,
       status: 'Active',
@@ -48,24 +53,39 @@ export function PlansView() {
     setPlanName('');
     setPlanBudget('');
     setIsNewPlanModalOpen(false);
+    if (created && created.id) {
+      setActivePlanId(created.id);
+    }
+    showToast(`Created plan "${planName.trim()}"!`, 'success');
     await loadPlans();
   };
 
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activePlanId || !itemName.trim()) return;
+    const currentTargetId = activePlanId || activePlan?.id;
+    if (!currentTargetId || !itemName.trim()) {
+      showToast('Please specify an item name and plan', 'error');
+      return;
+    }
 
-    await planService.addPlanItem(activePlanId, {
+    const est = parseFloat(itemEstAmount) || 0;
+    const qty = parseInt(itemQuantity) || 1;
+
+    await planService.addPlanItem(currentTargetId, {
       name: itemName.trim(),
-      estimated_amount: parseFloat(itemEstAmount) || 0,
-      quantity: 1,
+      estimated_amount: est,
+      quantity: qty,
+      category: itemCategory || 'General',
       priority: 'Medium',
       status: 'Planned',
     });
 
     setItemName('');
     setItemEstAmount('');
+    setItemCategory('General');
+    setItemQuantity('1');
     setIsNewItemModalOpen(false);
+    showToast(`Added "${itemName.trim()}" to plan!`, 'success');
     await loadPlans();
   };
 
@@ -153,10 +173,30 @@ export function PlansView() {
               <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-900">
                 <span className="text-amber-700 dark:text-amber-300 block">Remaining Budget</span>
                 <span className="text-lg font-extrabold text-amber-600 dark:text-amber-400">
-                  {formatCurrency((activePlan.budget || 0) - (activePlan.total_actual || 0))}
+                  {formatCurrency(Math.max(0, (activePlan.budget || 0) - (activePlan.total_actual || 0)))}
                 </span>
               </div>
             </div>
+
+            {/* Budget Progress Bar */}
+            {activePlan.budget && activePlan.budget > 0 ? (
+              <div className="space-y-1.5 pt-1">
+                <div className="flex items-center justify-between text-xs font-bold">
+                  <span className="text-slate-600 dark:text-slate-400">
+                    Budget Utilized: {formatCurrency(activePlan.total_actual || 0)} of {formatCurrency(activePlan.budget)}
+                  </span>
+                  <span className="text-indigo-600 dark:text-indigo-400 font-extrabold">
+                    {activePlan.progress}% Spent
+                  </span>
+                </div>
+                <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-linear-to-r from-emerald-500 via-indigo-500 to-indigo-600 rounded-full transition-all duration-300"
+                    style={{ width: `${activePlan.progress}%` }}
+                  />
+                </div>
+              </div>
+            ) : null}
           </div>
 
           {/* Plan Items Table */}
@@ -271,38 +311,87 @@ export function PlansView() {
 
       {/* Add Plan Item Modal */}
       {isNewItemModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">Add Plan Item</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 animate-scaleUp">
+            <div className="flex items-center justify-between pb-1 border-b border-slate-100 dark:border-slate-800">
+              <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">Add Plan Item</h2>
+              <button
+                type="button"
+                onClick={() => setIsNewItemModalOpen(false)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
             <form onSubmit={handleAddItem} className="space-y-3">
-              <input
-                type="text"
-                required
-                placeholder="Item Name (e.g. Refrigerator, TV)"
-                value={itemName}
-                onChange={(e) => setItemName(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none"
-              />
-              <input
-                type="number"
-                required
-                min="1"
-                placeholder="Estimated Amount (₦)"
-                value={itemEstAmount}
-                onChange={(e) => setItemEstAmount(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none"
-              />
+              <div>
+                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">Item Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Item Name (e.g. Refrigerator, TV, Curtains)"
+                  value={itemName}
+                  onChange={(e) => setItemName(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">Category</label>
+                <select
+                  value={itemCategory}
+                  onChange={(e) => setItemCategory(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none"
+                >
+                  <option value="General">General</option>
+                  <option value="Housing">Housing</option>
+                  <option value="Furniture">Furniture</option>
+                  <option value="Electronics">Electronics</option>
+                  <option value="Appliances">Appliances</option>
+                  <option value="Logistics">Logistics</option>
+                  <option value="Vehicle">Vehicle</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="min-w-0">
+                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">Estimated Cost (₦) *</label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    placeholder="250000"
+                    value={itemEstAmount}
+                    onChange={(e) => setItemEstAmount(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div className="min-w-0">
+                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">Quantity</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={itemQuantity}
+                    onChange={(e) => setItemQuantity(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+
               <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setIsNewItemModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-500"
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-extrabold shadow-md"
+                  className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold shadow-md active:scale-95 transition-all"
                 >
                   Add Item
                 </button>

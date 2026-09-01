@@ -11,6 +11,7 @@ import { AlarmBannerModal } from '@/components/layout/AlarmBannerModal';
 import { ConfirmModal } from '@/components/layout/ConfirmModal';
 import { AppTourModal } from '@/components/layout/AppTourModal';
 import { PwaInstallModal } from '@/components/layout/PwaInstallModal';
+import { CreateReminderModal } from '@/components/notifications/CreateReminderModal';
 import { SplashScreen } from '@/components/layout/SplashScreen';
 import { authService } from '@/lib/services/auth';
 import { initAlarmScheduler } from '@/lib/services/alarmScheduler';
@@ -20,6 +21,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
+  const [isCreateReminderOpen, setIsCreateReminderOpen] = useState(false);
   const [isAuthChecked, setIsAuthChecked] = useState(false);
 
   useEffect(() => {
@@ -61,7 +63,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         router.push('/plans');
         break;
       case 'REMINDER':
-        router.push('/notifications');
+        setIsCreateReminderOpen(true);
         break;
       case 'NOTE':
         router.push('/notes');
@@ -106,6 +108,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <SearchModal
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
+      />
+
+      {/* Interactive Create Reminder Modal */}
+      <CreateReminderModal
+        isOpen={isCreateReminderOpen}
+        onClose={() => setIsCreateReminderOpen(false)}
       />
 
       {/* Interactive Alarm Blasting Banner Modal */}
