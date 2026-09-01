@@ -173,7 +173,7 @@ export function LoginView() {
           <p className="text-xs text-slate-400">
             Don't have an account?{' '}
             <Link href="/signup" className="font-extrabold text-indigo-400 hover:text-indigo-300 underline">
-              Create New Account & Set Up
+              Create Account
             </Link>
           </p>
         </div>
