@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  Sun, CheckSquare, Clock, DollarSign, Plus, ArrowUpRight, ArrowDownRight,
+  Sun, Moon, CheckSquare, Clock, DollarSign, Plus, ArrowUpRight, ArrowDownRight,
   ChevronRight, Calendar, AlertCircle, Compass, Flag, ShieldCheck, Play
 } from 'lucide-react';
 import { Task, Activity, Plan, Goal, Bill } from '@/types';
@@ -36,35 +36,67 @@ export function TodayDashboard({ onOpenQuickCreate, onOpenTimer }: TodayDashboar
   });
 
   const todayDate = new Date();
+  const currentHour = todayDate.getHours();
+  let greeting = 'Good Morning';
+  let GreetingIcon = Sun;
+
+  if (currentHour >= 12 && currentHour < 17) {
+    greeting = 'Good Afternoon';
+    GreetingIcon = Sun;
+  } else if (currentHour >= 17 || currentHour < 5) {
+    greeting = 'Good Evening';
+    GreetingIcon = Moon;
+  }
+
   const formattedDate = todayDate.toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
   });
 
-  useEffect(() => {
-    async function loadData() {
-      const profile = await profileService.getProfile();
-      if (profile.full_name && profile.full_name.trim() !== '') {
-        const firstName = profile.full_name.split(' ')[0];
-        setUserName(firstName);
-      }
+  const [payWindowStatus, setPayWindowStatus] = useState<any>(null);
 
-      const todayTasks = await taskService.getTodayTasks();
-      setTasks(todayTasks.length > 0 ? todayTasks : localStore.tasks);
-      const todayActs = await activityService.getTodayActivities();
-      setActivities(todayActs);
-      const allPlans = await planService.getPlans();
-      setPlans(allPlans);
-      const allGoals = await goalService.getGoals();
-      setGoals(allGoals);
-      const allBills = await moneyService.getBills();
-      setBills(allBills.filter((b) => !b.is_paid));
+  const loadData = async () => {
+    const profile = await profileService.getProfile();
+    if (profile.full_name && profile.full_name.trim() !== '') {
+      const firstName = profile.full_name.split(' ')[0];
+      setUserName(firstName);
+    }
+
+    const todayTasks = await taskService.getTodayTasks();
+    setTasks(todayTasks.length > 0 ? todayTasks : localStore.tasks);
+    const todayActs = await activityService.getTodayActivities();
+    setActivities(todayActs);
+    const allPlans = await planService.getPlans();
+    setPlans(allPlans);
+    const allGoals = await goalService.getGoals();
+    setGoals(allGoals);
+    const allBills = await moneyService.getBills();
+    setBills(allBills.filter((b) => !b.is_paid));
+    const financial = await moneyService.getFinancialOverview();
+    setMoneySummary(financial);
+    const status = moneyService.getPayWindowStatus();
+    setPayWindowStatus(status);
+  };
+
+  useEffect(() => {
+    loadData();
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('oura_balance_updated', loadData);
+      return () => window.removeEventListener('oura_balance_updated', loadData);
+    }
+  }, []);
+
+  const handleClaimSalary = async () => {
+    const record = await moneyService.claimMonthlySalary();
+    if (record) {
+      const status = moneyService.getPayWindowStatus();
+      setPayWindowStatus(status);
       const financial = await moneyService.getFinancialOverview();
       setMoneySummary(financial);
     }
-    loadData();
-  }, []);
+  };
 
   const completedTasksCount = tasks.filter((t) => t.status === 'Completed').length;
   const taskProgress = tasks.length > 0 ? Math.round((completedTasksCount / tasks.length) * 100) : 0;
@@ -76,18 +108,18 @@ export function TodayDashboard({ onOpenQuickCreate, onOpenTimer }: TodayDashboar
   };
 
   return (
-    <div className="space-y-8 animate-fadeIn max-w-7xl mx-auto pb-12">
+    <div className="space-y-8 animate-fadeIn max-w-7xl mx-auto pb-12 select-none">
       {/* 1. Header & Welcome Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-linear-to-r from-indigo-900 via-indigo-800 to-indigo-950 p-6 sm:p-8 rounded-3xl text-white shadow-xl relative overflow-hidden">
         <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-indigo-500/20 via-transparent to-transparent pointer-events-none" />
 
         <div className="space-y-1 relative z-10">
           <div className="flex items-center gap-2 text-indigo-200 text-xs font-semibold uppercase tracking-wider">
-            <Sun className="w-4 h-4 text-amber-300" />
+            <GreetingIcon className="w-4 h-4 text-amber-300" />
             <span>{formattedDate}</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-            Good Morning, {userName} 👋
+          <h1 className="text-lg sm:text-xl font-extrabold tracking-tight">
+            {greeting}, {userName} 👋
           </h1>
           <p className="text-indigo-200 text-sm max-w-lg">
             Plan your life. Manage your day. Control your money. Achieve your goals.
@@ -105,6 +137,31 @@ export function TodayDashboard({ onOpenQuickCreate, onOpenTimer }: TodayDashboar
           </button>
         </div>
       </div>
+
+      {/* Salary Payout Active Prompt Card */}
+      {payWindowStatus && payWindowStatus.isActive && !payWindowStatus.isClaimed && (
+        <div className="p-5 rounded-3xl bg-linear-to-r from-emerald-950 via-slate-900 to-indigo-950 border border-emerald-500/40 text-white shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-pulse">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-2xl bg-emerald-500/20 text-emerald-400 shrink-0">
+              <DollarSign className="w-6 h-6 stroke-3" />
+            </div>
+            <div>
+              <h3 className="font-extrabold text-sm text-white">Monthly Salary Available ({payWindowStatus.cycleMonth})</h3>
+              <p className="text-xs text-slate-300 mt-0.5">
+                Confirm salary received to credit <span className="font-extrabold text-emerald-400">{formatCurrency(payWindowStatus.netSalary)}</span> to your available balance.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={handleClaimSalary}
+            className="px-5 py-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs shadow-md shrink-0 flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+          >
+            <DollarSign className="w-4 h-4 stroke-3" />
+            <span>Confirm Payout Received</span>
+          </button>
+        </div>
+      )}
 
       {/* 2. Top Metrics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -220,9 +277,9 @@ export function TodayDashboard({ onOpenQuickCreate, onOpenTimer }: TodayDashboar
               </div>
               <Link
                 href="/tasks"
-                className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 flex items-center gap-1"
+                className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 flex items-center gap-1 shrink-0 whitespace-nowrap"
               >
-                <span>View All</span>
+                <span>View</span>
                 <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
@@ -320,9 +377,9 @@ export function TodayDashboard({ onOpenQuickCreate, onOpenTimer }: TodayDashboar
               </div>
               <Link
                 href="/plans"
-                className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 flex items-center gap-1"
+                className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 flex items-center gap-1 shrink-0 whitespace-nowrap"
               >
-                <span>View Plans</span>
+                <span>View</span>
                 <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
@@ -384,8 +441,9 @@ export function TodayDashboard({ onOpenQuickCreate, onOpenTimer }: TodayDashboar
                   </p>
                 </div>
               </div>
-              <Link href="/money/bills" className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                Manage
+              <Link href="/money/bills" className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 flex items-center gap-1 shrink-0 whitespace-nowrap">
+                <span>View</span>
+                <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
 
@@ -427,8 +485,9 @@ export function TodayDashboard({ onOpenQuickCreate, onOpenTimer }: TodayDashboar
                   </p>
                 </div>
               </div>
-              <Link href="/goals" className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                View All
+              <Link href="/goals" className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 flex items-center gap-1 shrink-0 whitespace-nowrap">
+                <span>View</span>
+                <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
 

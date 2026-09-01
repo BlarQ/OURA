@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Settings, Download, Trash2, ShieldAlert, User, DollarSign, FileText, Sparkles } from 'lucide-react';
+import { Settings, Download, Trash2, ShieldAlert, User, DollarSign, FileText, Sparkles, RotateCcw } from 'lucide-react';
 import { localStore } from '@/lib/supabase/client';
+import { moneyService } from '@/lib/services/money';
 import { formatCurrency } from '@/lib/calculations/money';
 import { generateTransactionsPDF, generateFullExecutivePDF } from '@/lib/utils/pdfExport';
 import { showConfirmModal, showToast } from '@/components/layout/ConfirmModal';
@@ -19,7 +20,6 @@ export function SettingsView() {
   };
 
   const handleExportCSV = () => {
-    // Generate CSV for transactions
     const headers = ['Date', 'Type', 'Amount', 'Category', 'Description'];
     const rows = localStore.transactions.map((tx) => [
       tx.transaction_date,
@@ -66,17 +66,34 @@ export function SettingsView() {
     showToast('Settings & Minimum Safe Balance updated successfully!', 'success');
   };
 
+  const handleResetAllData = () => {
+    showConfirmModal({
+      title: 'Reset All Platform Data to 0?',
+      message: 'Are you sure you want to reset ALL platform data across OURA to zero? This will permanently erase all financial transactions, income, expenses, salary records, budgets, savings goals, tasks, projects, activities, and notes. Available balance and counters will be reset to 0.',
+      isDanger: true,
+      confirmText: 'Yes, Reset Everything to 0',
+      onConfirm: async () => {
+        await moneyService.resetAllPlatformData();
+        showToast('All platform data has been reset to 0! 🔄', 'success');
+        setTimeout(() => {
+          if (typeof window !== 'undefined') window.location.reload();
+        }, 600);
+      },
+    });
+  };
+
   const handleDeleteAccount = () => {
     showConfirmModal({
       title: 'Permanently Delete OURA Account?',
       message: 'Are you sure you want to permanently delete your OURA account? This action will erase stored tasks, activities, and financial ledgers. This action cannot be undone.',
       isDanger: true,
       confirmText: 'Delete Account',
-      onConfirm: () => {
-        localStore.transactions = [];
-        localStore.tasks = [];
-        localStore.projects = [];
+      onConfirm: async () => {
+        await moneyService.resetAllPlatformData();
         showToast('Account data cleared successfully.', 'info');
+        setTimeout(() => {
+          if (typeof window !== 'undefined') window.location.reload();
+        }, 600);
       },
     });
   };
@@ -85,9 +102,9 @@ export function SettingsView() {
     <div className="space-y-8 max-w-4xl mx-auto pb-16 animate-fadeIn">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-            <Settings className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-            Settings & Account Management
+          <h1 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <Settings className="w-5 h-5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+            <span>Settings & Account Management</span>
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Profile details, currency options, minimum safe balance, and data export
@@ -157,12 +174,23 @@ export function SettingsView() {
             </div>
           </div>
 
-          <button
-            type="submit"
-            className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold shadow-md active:scale-95 transition-all"
-          >
-            Save Settings
-          </button>
+          <div className="flex flex-wrap items-center gap-3 pt-2">
+            <button
+              type="submit"
+              className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold shadow-md active:scale-95 transition-all"
+            >
+              Save Settings
+            </button>
+
+            <button
+              type="button"
+              onClick={handleResetAllData}
+              className="px-4 py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-300/40 text-xs font-bold transition-all flex items-center gap-2"
+            >
+              <RotateCcw className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              <span>Reset All Data to 0</span>
+            </button>
+          </div>
         </form>
       </div>
 
@@ -195,22 +223,32 @@ export function SettingsView() {
         </div>
       </div>
 
-      {/* Account Deletion */}
+      {/* Danger Zone / Reset Data */}
       <div className="bg-rose-50 dark:bg-rose-950/40 p-6 rounded-3xl border border-rose-200 dark:border-rose-900 space-y-4">
         <h2 className="text-base font-extrabold text-rose-700 dark:text-rose-300 flex items-center gap-2">
           <ShieldAlert className="w-5 h-5" />
           Danger Zone
         </h2>
         <p className="text-xs text-rose-600 dark:text-rose-400">
-          Permanently delete your OURA account and erase stored tasks, activities, and financial ledgers.
+          Reset all platform data to 0 or permanently delete your account. This action will erase all financial records, tasks, activities, and ledgers.
         </p>
-        <button
-          onClick={handleDeleteAccount}
-          className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-extrabold shadow-md active:scale-95 transition-all flex items-center gap-2"
-        >
-          <Trash2 className="w-4 h-4" />
-          <span>Delete Account</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={handleResetAllData}
+            className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-extrabold shadow-md active:scale-95 transition-all flex items-center gap-2"
+          >
+            <RotateCcw className="w-4 h-4" />
+            <span>Reset All Data to 0</span>
+          </button>
+
+          <button
+            onClick={handleDeleteAccount}
+            className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-extrabold shadow-md active:scale-95 transition-all flex items-center gap-2"
+          >
+            <Trash2 className="w-4 h-4" />
+            <span>Delete Account</span>
+          </button>
+        </div>
       </div>
     </div>
   );

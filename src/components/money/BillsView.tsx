@@ -51,9 +51,9 @@ export function BillsView() {
     <div className="space-y-6 max-w-7xl mx-auto pb-16 animate-fadeIn">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-            <CalendarDays className="w-6 h-6 text-rose-600 dark:text-rose-400" />
-            Bills & Recurring Expenses
+          <h1 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <CalendarDays className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0" />
+            <span>Bills & Recurring Expenses</span>
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Track upcoming bills and record automated payment debits

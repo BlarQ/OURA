@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { DollarSign, Plus, ArrowDownRight } from 'lucide-react';
+import { DollarSign, Plus, ArrowDownRight, Trash2 } from 'lucide-react';
 import { ExpenseRecord, ExpenseCategory, PaymentMethod } from '@/types';
 import { moneyService } from '@/lib/services/money';
 import { formatCurrency } from '@/lib/calculations/money';
+import { showToast, showConfirmModal } from '@/components/layout/ConfirmModal';
 
 export function ExpensesView() {
   const [expenses, setExpenses] = useState<ExpenseRecord[]>([]);
@@ -22,6 +23,10 @@ export function ExpensesView() {
 
   useEffect(() => {
     loadExpenses();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('oura_balance_updated', loadExpenses);
+      return () => window.removeEventListener('oura_balance_updated', loadExpenses);
+    }
   }, []);
 
   const handleAdd = async (e: React.FormEvent) => {
@@ -40,16 +45,33 @@ export function ExpensesView() {
     setDescription('');
     setAmount('');
     setIsModalOpen(false);
+    showToast(`Expense of ${formatCurrency(amt)} logged!`, 'success');
     await loadExpenses();
+  };
+
+  const handleDeleteExpense = (id: string, expName: string) => {
+    showConfirmModal({
+      title: 'Delete Expense Record?',
+      message: `Are you sure you want to delete this expense entry ("${expName}")? This will credit back your available balance.`,
+      isDanger: true,
+      confirmText: 'Delete Expense',
+      onConfirm: async () => {
+        const deleted = await moneyService.deleteExpenseRecord(id);
+        if (deleted) {
+          showToast(`Expense entry deleted.`, 'success');
+          await loadExpenses();
+        }
+      },
+    });
   };
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16 animate-fadeIn">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-            <DollarSign className="w-6 h-6 text-rose-600 dark:text-rose-400" />
-            Expense Management
+          <h1 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <DollarSign className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0" />
+            <span>Expense Management</span>
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Fast expense logging, categorized debits, and budget tracking
@@ -58,10 +80,10 @@ export function ExpensesView() {
 
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-md active:scale-95 transition-all"
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-md shrink-0 whitespace-nowrap active:scale-95 transition-all"
         >
           <Plus className="w-4 h-4" />
-          <span>Add Expense</span>
+          <span>Add</span>
         </button>
       </div>
 
@@ -69,21 +91,37 @@ export function ExpensesView() {
         {expenses.map((exp) => (
           <div
             key={exp.id}
-            className="p-4.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between"
+            className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between gap-3 hover:border-rose-300 transition-all"
           >
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950 text-rose-600">
-                <ArrowDownRight className="w-5 h-5" />
+            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+              <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-400 shrink-0">
+                <ArrowDownRight className="w-4 h-4" />
               </div>
-              <div>
-                <h3 className="font-extrabold text-slate-900 dark:text-white text-sm">{exp.description || exp.category}</h3>
-                <span className="text-xs text-slate-500 font-medium">Category: {exp.category} • Method: {exp.payment_method} • Date: {exp.date}</span>
+              <div className="min-w-0 flex-1 space-y-0.5">
+                <h3 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm truncate">
+                  {exp.description || exp.category}
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                  {exp.category} • {exp.date}
+                </p>
               </div>
             </div>
 
-            <span className="text-base font-extrabold text-rose-600 dark:text-rose-400">
-              -{formatCurrency(exp.amount)}
-            </span>
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="shrink-0 whitespace-nowrap text-right">
+                <span className="text-xs sm:text-sm font-extrabold text-rose-600 dark:text-rose-400">
+                  -{formatCurrency(exp.amount)}
+                </span>
+              </div>
+
+              <button
+                onClick={() => handleDeleteExpense(exp.id, exp.description || exp.category)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors shrink-0"
+                title="Delete Expense Record"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         ))}
       </div>

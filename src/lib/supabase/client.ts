@@ -13,12 +13,25 @@ export const supabase = (supabaseUrl && supabaseAnonKey)
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
 
+export const DEFAULT_SALARY_CONFIG = {
+  employer: 'TechCorp Africa Ltd',
+  basic_salary: 300000,
+  housing_allowance: 120000,
+  transport_allowance: 50000,
+  other_allowances: 30000,
+  deductions: 50000,
+  pay_start_day: 24,
+  pay_end_day: 2,
+};
+
 export const DEFAULT_PROFILE: UserProfile = {
   id: 'usr_01',
   full_name: 'User',
   email: 'user@oura.app',
   currency: 'NGN',
   minimum_safe_balance: 100000,
+  salary_config: { ...DEFAULT_SALARY_CONFIG },
+  claimed_salary_months: [],
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
 };
@@ -57,6 +70,7 @@ export const localStore = {
   dailyReviews: [] as DailyReview[],
   weeklyReviews: [] as WeeklyReview[],
   monthlyReviews: [] as MonthlyReview[],
+  deletedTxIds: [] as string[],
 };
 
 function getStorageKey(): string {

@@ -99,8 +99,10 @@ export function SignupView() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <Link href="/">
-                <img src="/logo.svg" alt="OURA" className="w-8 h-8 object-contain hover:scale-105 transition-transform" />
+              <Link href="/login">
+                <div className="p-1.5 rounded-xl bg-indigo-600/20 border border-indigo-500/30 shadow-xs flex items-center justify-center hover:scale-105 transition-transform">
+                  <img src="/logo.svg" alt="OURA" className="w-6 h-6 object-contain" />
+                </div>
               </Link>
               <h1 className="text-xl font-extrabold tracking-tight bg-linear-to-r from-white via-indigo-100 to-indigo-300 bg-clip-text text-transparent">
                 OURA Onboarding

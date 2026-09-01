@@ -1,5 +1,17 @@
 export type CurrencyCode = 'NGN' | 'USD' | 'EUR' | 'GBP';
 
+export interface SalaryConfig {
+  employer: string;
+  basic_salary: number;
+  housing_allowance: number;
+  transport_allowance: number;
+  other_allowances: number;
+  deductions: number;
+  notes?: string;
+  pay_start_day: number; // e.g. 24
+  pay_end_day: number;   // e.g. 2
+}
+
 export interface UserProfile {
   id: string;
   full_name: string;
@@ -7,6 +19,8 @@ export interface UserProfile {
   avatar_url?: string;
   currency: CurrencyCode;
   minimum_safe_balance: number;
+  salary_config?: SalaryConfig;
+  claimed_salary_months?: string[];
   created_at: string;
   updated_at: string;
 }

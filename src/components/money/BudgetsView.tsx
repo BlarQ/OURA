@@ -56,9 +56,9 @@ export function BudgetsView() {
     <div className="space-y-6 max-w-7xl mx-auto pb-16 animate-fadeIn">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-            <PieChart className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-            Monthly Budget Management
+          <h1 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <PieChart className="w-5 h-5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+            <span>Category Budgets & Thresholds</span>
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Category thresholds calculated dynamically from your logged expense transactions

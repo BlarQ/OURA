@@ -2,13 +2,13 @@
 
 import React, { useState } from 'react';
 import {
-  X, CheckSquare, Activity, DollarSign, TrendingUp, Compass, Bell, FileText
+  X, CheckSquare, Activity, DollarSign, TrendingUp, Compass, Bell, FileText, Sparkles
 } from 'lucide-react';
 
 interface QuickCreateModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectOption: (type: 'TASK' | 'ACTIVITY' | 'EXPENSE' | 'INCOME' | 'PLAN' | 'REMINDER' | 'NOTE') => void;
+  onSelectOption: (type: 'TASK' | 'ACTIVITY' | 'EXPENSE' | 'INCOME' | 'SALARY' | 'PLAN' | 'REMINDER' | 'NOTE') => void;
 }
 
 export function QuickCreateModal({ isOpen, onClose, onSelectOption }: QuickCreateModalProps) {
@@ -39,9 +39,16 @@ export function QuickCreateModal({ isOpen, onClose, onSelectOption }: QuickCreat
     {
       type: 'INCOME' as const,
       title: 'Income',
-      description: 'Record incoming funds & salary',
+      description: 'Record incoming funds & extra funding',
       icon: TrendingUp,
       color: 'bg-emerald-500 text-white',
+    },
+    {
+      type: 'SALARY' as const,
+      title: 'Salary Payout',
+      description: 'Confirm salary payout & configure window',
+      icon: Sparkles,
+      color: 'bg-teal-500 text-white',
     },
     {
       type: 'PLAN' as const,

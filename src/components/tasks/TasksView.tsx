@@ -112,9 +112,9 @@ export function TasksView() {
       {/* Top Title Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-            <CheckSquare className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-            Task Management
+          <h1 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <CheckSquare className="w-5 h-5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+            <span>Task Management</span>
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Organize daily tasks, priorities, subtasks, and reminders

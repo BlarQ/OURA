@@ -1,8 +1,8 @@
 import {
   SalaryRecord, IncomeRecord, ExpenseRecord, Transaction, Budget, Bill,
-  SavingsGoal, AffordabilityCalculation
+  SavingsGoal, AffordabilityCalculation, SalaryConfig, IncomeCategory, PaymentMethod
 } from '@/types';
-import { supabase, localStore, saveLocalStore } from '../supabase/client';
+import { supabase, localStore, saveLocalStore, DEFAULT_SALARY_CONFIG } from '../supabase/client';
 import {
   calculateGrossSalary, calculateNetSalary, calculateFinancialBalance,
   calculateAffordability
@@ -29,8 +29,13 @@ export const moneyService = {
       } catch (e) {}
     }
 
+    const deletedSet = new Set(localStore.deletedTxIds || []);
+    dbTxs = dbTxs.filter((t) => !deletedSet.has(t.id));
+
     const dbTxIds = new Set(dbTxs.map((t) => t.id));
-    const localOnlyTxs = localStore.transactions.filter((t) => !dbTxIds.has(t.id));
+    const localOnlyTxs = localStore.transactions.filter(
+      (t) => !dbTxIds.has(t.id) && !deletedSet.has(t.id)
+    );
     return [...dbTxs, ...localOnlyTxs];
   },
 
@@ -66,7 +71,121 @@ export const moneyService = {
     };
   },
 
-  // --- SALARY MANAGEMENT ---
+  // --- SALARY CONFIGURATION & PAYOUT WINDOW AUTOMATION ---
+  getSalaryConfig(): SalaryConfig {
+    const profile = localStore.profile;
+    return profile.salary_config || DEFAULT_SALARY_CONFIG;
+  },
+
+  async saveSalaryConfig(config: SalaryConfig): Promise<SalaryConfig> {
+    localStore.profile.salary_config = { ...config };
+    saveLocalStore();
+    notifyBalanceUpdate();
+    return config;
+  },
+
+  getPayWindowStatus() {
+    const now = new Date();
+    const currentDay = now.getDate();
+    const currentMonth = now.toISOString().substring(0, 7); // e.g. "2026-09"
+    const config = this.getSalaryConfig();
+    const startDay = config.pay_start_day || 24;
+    const endDay = config.pay_end_day || 2;
+
+    let cycleMonth = currentMonth;
+    let isActive = false;
+
+    if (startDay > endDay) {
+      // Crosses month boundary (e.g. 24th to 2nd)
+      if (currentDay >= startDay || currentDay <= endDay) {
+        isActive = true;
+        if (currentDay <= endDay) {
+          // Current day is e.g. 1st or 2nd -> payout cycle belongs to previous month
+          const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+          cycleMonth = prevDate.toISOString().substring(0, 7);
+        }
+      }
+    } else {
+      // Normal range within same month (e.g. 1st to 5th)
+      if (currentDay >= startDay && currentDay <= endDay) {
+        isActive = true;
+      }
+    }
+
+    const claimedMonths = localStore.profile.claimed_salary_months || [];
+    const isClaimed = claimedMonths.includes(cycleMonth);
+
+    const grossSalary = calculateGrossSalary(
+      config.basic_salary, config.housing_allowance, config.transport_allowance,
+      config.other_allowances, 0
+    );
+    const netSalary = calculateNetSalary(grossSalary, config.deductions);
+
+    return {
+      isActive,
+      isClaimed,
+      cycleMonth,
+      startDay,
+      endDay,
+      employer: config.employer,
+      netSalary,
+      config,
+      formattedRange: `Active from ${startDay}th to ${endDay}nd of each month`,
+    };
+  },
+
+  async claimMonthlySalary(): Promise<SalaryRecord | null> {
+    const status = this.getPayWindowStatus();
+    if (status.isClaimed) return null;
+
+    const today = new Date().toISOString().split('T')[0];
+    const config = status.config;
+    const record = await this.createSalaryRecord({
+      employer: config.employer,
+      salary_month: status.cycleMonth,
+      basic_salary: config.basic_salary,
+      housing_allowance: config.housing_allowance,
+      transport_allowance: config.transport_allowance,
+      other_allowances: config.other_allowances,
+      bonus: 0,
+      deductions: config.deductions,
+      payment_date: today,
+      notes: `Automated monthly salary payout for ${status.cycleMonth}`,
+    });
+
+    const claimed = localStore.profile.claimed_salary_months || [];
+    if (!claimed.includes(status.cycleMonth)) {
+      claimed.push(status.cycleMonth);
+      localStore.profile.claimed_salary_months = claimed;
+      saveLocalStore();
+    }
+
+    notifyBalanceUpdate();
+    return record;
+  },
+
+  async addExtraFunding(data: {
+    source: string;
+    category?: IncomeCategory;
+    amount: number;
+    date?: string;
+    payment_method?: PaymentMethod;
+    description?: string;
+  }): Promise<IncomeRecord> {
+    const today = new Date().toISOString().split('T')[0];
+    const record = await this.addIncome({
+      source: data.source || 'Extra Funding',
+      category: data.category || 'Bonus',
+      amount: data.amount,
+      date: data.date || today,
+      description: data.description || 'Extra funding added to available balance',
+      payment_method: data.payment_method || 'Bank Transfer',
+    });
+    notifyBalanceUpdate();
+    return record;
+  },
+
+  // --- SALARY RECORDS MANAGEMENT ---
   async getSalaryRecords(): Promise<SalaryRecord[]> {
     let dbRecords: SalaryRecord[] = [];
     if (supabase) {
@@ -142,6 +261,79 @@ export const moneyService = {
     return record;
   },
 
+  async deleteSalaryRecord(id: string): Promise<boolean> {
+    const target = localStore.salary.find((s) => s.id === id);
+    const salaryMonth = target?.salary_month;
+
+    // 1. Remove salary record
+    localStore.salary = localStore.salary.filter((s) => s.id !== id);
+
+    // 2. Remove associated income records and credit transactions
+    const incomeSources = target
+      ? [`${target.employer} Salary (${target.salary_month})`, `Net salary payout for ${target.salary_month}`]
+      : [];
+
+    const assocIncomes = localStore.income.filter(
+      (inc) =>
+        (target && inc.date === target.payment_date && inc.amount === target.net_salary) ||
+        (inc.category === 'Salary' && incomeSources.includes(inc.source)) ||
+        (salaryMonth && inc.source.includes(salaryMonth))
+    );
+    const assocIncomeIds = new Set(assocIncomes.map((inc) => inc.id));
+
+    localStore.income = localStore.income.filter(
+      (inc) => !assocIncomeIds.has(inc.id) && !(salaryMonth && inc.source.includes(salaryMonth))
+    );
+
+    const txsToDelete = localStore.transactions.filter(
+      (tx) =>
+        (tx.related_id && assocIncomeIds.has(tx.related_id)) ||
+        (salaryMonth && tx.description.includes(salaryMonth)) ||
+        (target && tx.amount === target.net_salary && tx.category === 'Salary')
+    );
+
+    const deletedTxIds = localStore.deletedTxIds || [];
+    txsToDelete.forEach((t) => deletedTxIds.push(t.id));
+    localStore.deletedTxIds = Array.from(new Set(deletedTxIds));
+
+    localStore.transactions = localStore.transactions.filter(
+      (tx) => !localStore.deletedTxIds.includes(tx.id)
+    );
+
+    // 3. Reset claimed_salary_months
+    if (salaryMonth && localStore.profile.claimed_salary_months) {
+      localStore.profile.claimed_salary_months = localStore.profile.claimed_salary_months.filter(
+        (m) => m !== salaryMonth
+      );
+    }
+    saveLocalStore();
+
+    if (supabase) {
+      try {
+        await supabase.from('salary_records').delete().eq('id', id);
+        if (salaryMonth) {
+          await supabase.from('salary_records').delete().eq('salary_month', salaryMonth);
+          await supabase.from('income_records').delete().ilike('source', `%${salaryMonth}%`);
+          await supabase.from('transactions').delete().ilike('description', `%${salaryMonth}%`);
+        }
+        for (const incId of assocIncomeIds) {
+          await supabase.from('income_records').delete().eq('id', incId);
+          await supabase.from('transactions').delete().eq('related_id', incId);
+        }
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData.user?.id) {
+          await supabase
+            .from('profiles')
+            .update({ claimed_salary_months: localStore.profile.claimed_salary_months })
+            .eq('id', userData.user.id);
+        }
+      } catch (e) {}
+    }
+
+    notifyBalanceUpdate();
+    return true;
+  },
+
   // --- INCOME MANAGEMENT ---
   async getIncomeRecords(): Promise<IncomeRecord[]> {
     let dbRecords: IncomeRecord[] = [];
@@ -214,6 +406,51 @@ export const moneyService = {
     return newIncome;
   },
 
+  async deleteIncomeRecord(id: string): Promise<boolean> {
+    const target = localStore.income.find((inc) => inc.id === id);
+
+    localStore.income = localStore.income.filter((inc) => inc.id !== id);
+
+    const txsToDelete = localStore.transactions.filter(
+      (tx) => tx.related_id === id || (target && tx.amount === target.amount && tx.description === target.source)
+    );
+    const deletedTxIds = localStore.deletedTxIds || [];
+    txsToDelete.forEach((t) => deletedTxIds.push(t.id));
+    localStore.deletedTxIds = Array.from(new Set(deletedTxIds));
+
+    localStore.transactions = localStore.transactions.filter(
+      (tx) => !localStore.deletedTxIds.includes(tx.id)
+    );
+
+    if (target && (target.category === 'Salary' || target.source.includes('Salary'))) {
+      const salaryRecordsToRemove = localStore.salary.filter(
+        (s) => s.net_salary === target.amount || (s.salary_month && target.source.includes(s.salary_month))
+      );
+      const salaryMonthsToRemove = new Set(salaryRecordsToRemove.map((s) => s.salary_month));
+
+      localStore.salary = localStore.salary.filter((s) => !salaryMonthsToRemove.has(s.salary_month));
+      if (localStore.profile.claimed_salary_months) {
+        localStore.profile.claimed_salary_months = localStore.profile.claimed_salary_months.filter(
+          (m) => !salaryMonthsToRemove.has(m) && !target.source.includes(m)
+        );
+      }
+    }
+    saveLocalStore();
+
+    if (supabase) {
+      try {
+        await supabase.from('income_records').delete().eq('id', id);
+        await supabase.from('transactions').delete().eq('related_id', id);
+        if (target && target.source) {
+          await supabase.from('transactions').delete().eq('description', target.source);
+        }
+      } catch (e) {}
+    }
+
+    notifyBalanceUpdate();
+    return true;
+  },
+
   // --- EXPENSE MANAGEMENT ---
   async getExpenseRecords(): Promise<ExpenseRecord[]> {
     let dbRecords: ExpenseRecord[] = [];
@@ -284,6 +521,76 @@ export const moneyService = {
 
     notifyBalanceUpdate();
     return newExpense;
+  },
+
+  async deleteExpenseRecord(id: string): Promise<boolean> {
+    const target = localStore.expenses.find((exp) => exp.id === id);
+
+    localStore.expenses = localStore.expenses.filter((exp) => exp.id !== id);
+
+    const txsToDelete = localStore.transactions.filter(
+      (tx) => tx.related_id === id || (target && tx.amount === target.amount && tx.description.includes(target.category))
+    );
+    const deletedTxIds = localStore.deletedTxIds || [];
+    txsToDelete.forEach((t) => deletedTxIds.push(t.id));
+    localStore.deletedTxIds = Array.from(new Set(deletedTxIds));
+
+    localStore.transactions = localStore.transactions.filter(
+      (tx) => !localStore.deletedTxIds.includes(tx.id)
+    );
+    saveLocalStore();
+
+    if (supabase) {
+      try {
+        await supabase.from('expense_records').delete().eq('id', id);
+        await supabase.from('transactions').delete().eq('related_id', id);
+      } catch (e) {}
+    }
+
+    notifyBalanceUpdate();
+    return true;
+  },
+
+  async deleteTransaction(id: string): Promise<boolean> {
+    const target = localStore.transactions.find((tx) => tx.id === id);
+
+    const deletedTxIds = localStore.deletedTxIds || [];
+    deletedTxIds.push(id);
+    localStore.deletedTxIds = Array.from(new Set(deletedTxIds));
+
+    localStore.transactions = localStore.transactions.filter((tx) => tx.id !== id);
+
+    if (target) {
+      if (target.related_id) {
+        if (target.related_type === 'INCOME') {
+          localStore.income = localStore.income.filter((i) => i.id !== target.related_id);
+        } else if (target.related_type === 'EXPENSE') {
+          localStore.expenses = localStore.expenses.filter((e) => e.id !== target.related_id);
+        }
+      }
+      if (target.category === 'Salary' || target.description.includes('Salary')) {
+        localStore.salary = localStore.salary.filter(
+          (s) => !(s.net_salary === target.amount || target.description.includes(s.salary_month))
+        );
+      }
+    }
+    saveLocalStore();
+
+    if (supabase) {
+      try {
+        await supabase.from('transactions').delete().eq('id', id);
+        if (target && target.related_id) {
+          if (target.related_type === 'INCOME') {
+            await supabase.from('income_records').delete().eq('id', target.related_id);
+          } else if (target.related_type === 'EXPENSE') {
+            await supabase.from('expense_records').delete().eq('id', target.related_id);
+          }
+        }
+      } catch (e) {}
+    }
+
+    notifyBalanceUpdate();
+    return true;
   },
 
   // --- BUDGETS ---
@@ -553,5 +860,50 @@ export const moneyService = {
       upcomingPlannedExpenses,
       overview.minimumSafeBalance
     );
+  },
+
+  // --- RESET ALL PLATFORM DATA TO ZERO ---
+  async resetAllPlatformData(): Promise<boolean> {
+    localStore.transactions = [];
+    localStore.income = [];
+    localStore.expenses = [];
+    localStore.salary = [];
+    localStore.budgets = [];
+    localStore.bills = [];
+    localStore.savings = [];
+    localStore.projects = [];
+    localStore.tasks = [];
+    localStore.activities = [];
+    localStore.plans = [];
+    localStore.goals = [];
+    localStore.notes = [];
+    localStore.notifications = [];
+    localStore.deletedTxIds = [];
+    localStore.profile.claimed_salary_months = [];
+
+    saveLocalStore();
+
+    if (supabase) {
+      try {
+        const tables = [
+          'transactions', 'income_records', 'expense_records', 'salary_records',
+          'budgets', 'bills', 'savings_goals', 'projects', 'tasks', 'activities',
+          'plans', 'goals', 'notes', 'notifications'
+        ];
+        for (const tbl of tables) {
+          await supabase.from(tbl).delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        }
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData.user?.id) {
+          await supabase
+            .from('profiles')
+            .update({ claimed_salary_months: [] })
+            .eq('id', userData.user.id);
+        }
+      } catch (e) {}
+    }
+
+    notifyBalanceUpdate();
+    return true;
   },
 };

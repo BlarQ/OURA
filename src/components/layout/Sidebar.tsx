@@ -59,11 +59,13 @@ export function Sidebar() {
       {/* Brand Header */}
       <div className="p-5 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
         <Link href="/today" className="flex items-center gap-3 group">
-          <img
-            src="/logo.svg"
-            alt="OURA Logo"
-            className="w-9 h-9 object-contain group-hover:scale-105 transition-transform duration-200"
-          />
+          <div className="p-2 rounded-2xl bg-indigo-600/10 dark:bg-indigo-950/80 border border-indigo-500/20 dark:border-indigo-800/60 shadow-2xs group-hover:scale-105 transition-transform duration-200 flex items-center justify-center">
+            <img
+              src="/logo.svg"
+              alt="OURA Logo"
+              className="w-7 h-7 object-contain"
+            />
+          </div>
           <div>
             <h1 className="font-(family-name:--font-syne) font-bold text-lg tracking-[0.12em] bg-linear-to-r from-slate-900 via-indigo-900 to-slate-800 dark:from-white dark:via-indigo-100 dark:to-indigo-300 bg-clip-text text-transparent leading-none">
               OURA

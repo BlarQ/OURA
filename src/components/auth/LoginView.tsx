@@ -48,12 +48,14 @@ export function LoginView() {
       <div className="w-full max-w-md bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 shadow-2xl space-y-6 relative z-10 animate-scaleUp">
         {/* Brand Logo Header */}
         <div className="text-center space-y-2">
-          <Link href="/" className="inline-block group">
-            <img
-              src="/logo.svg"
-              alt="OURA"
-              className="w-14 h-14 mx-auto mb-2 object-contain group-hover:scale-105 transition-transform duration-200"
-            />
+          <Link href="/login" className="inline-block group">
+            <div className="p-3.5 rounded-3xl bg-indigo-600/15 border border-indigo-500/30 shadow-xl mx-auto mb-3 w-16 h-16 flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
+              <img
+                src="/logo.svg"
+                alt="OURA"
+                className="w-10 h-10 object-contain"
+              />
+            </div>
           </Link>
           <h1 className="text-2xl font-extrabold tracking-tight bg-linear-to-r from-white via-indigo-100 to-indigo-300 bg-clip-text text-transparent">
             Welcome to OURA

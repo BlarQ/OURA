@@ -81,9 +81,9 @@ export function PlansView() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-            <Compass className="w-6 h-6 text-amber-600 dark:text-amber-400" />
-            Plans & Planned Expenses
+          <h1 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <Compass className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span>Plans & Planned Expenses</span>
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Organize apartment moves, major purchases, and multi-item project budgets

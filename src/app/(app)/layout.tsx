@@ -53,6 +53,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       case 'INCOME':
         router.push('/money/income');
         break;
+      case 'SALARY':
+        router.push('/money/salary');
+        break;
       case 'PLAN':
         router.push('/plans');
         break;
@@ -64,10 +67,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         break;
     }
   };
-
-  if (!isAuthChecked) {
-    return <SplashScreen />;
-  }
 
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-row font-sans selection:bg-indigo-600 selection:text-white">
