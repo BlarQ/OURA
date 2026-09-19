@@ -1,82 +1,373 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:where(.dark, .dark *));
-
 :root {
-  --background: #ffffff;
-  --foreground: #0f172a;
+  /* Sprout Social Tokens — Colors */
+  --color-ink-black: #040404;
+  --color-paper-white: #ffffff;
+  --color-ash-gray: #d9d9d9;
+  --color-smoke-gray: #cbcece;
+  --color-slate: #162020;
+  --color-pewter: #6e797a;
+  --color-sprout-green: #98e58e;
+
+  /* Typography */
+  --font-proxima-nova: 'Nunito Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  /* Spacing Scale */
+  --spacing-4: 4px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-24: 24px;
+  --spacing-32: 32px;
+  --spacing-40: 40px;
+  --spacing-48: 48px;
+  --spacing-64: 64px;
+
+  /* Border Radii (Strict 6px / 16px / 24px system) */
+  --radius-md: 6px;
+  --radius-2xl: 16px;
+  --radius-3xl: 24px;
+
+  /* Elevation */
+  --shadow-nav: rgba(39, 51, 51, 0.24) 0px 4px 8px 0px;
 }
 
-.dark {
-  --background: #020617;
-  --foreground: #f8fafc;
-}
+@theme {
+  --color-ink-black: #040404;
+  --color-paper-white: #ffffff;
+  --color-ash-gray: #d9d9d9;
+  --color-smoke-gray: #cbcece;
+  --color-slate: #162020;
+  --color-pewter: #6e797a;
+  --color-sprout-green: #98e58e;
 
-html, body {
-  width: 100%;
-  max-width: 100vw;
-  overflow-x: hidden;
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-*, *:before, *:after {
-  box-sizing: inherit;
+  --font-sans: var(--font-proxima-nova);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  background-color: var(--color-paper-white);
+  color: var(--color-ink-black);
+  font-family: var(--font-proxima-nova);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Date & Time Picker Global Styling for Mobile & PWA */
-input[type="date"],
-input[type="time"],
-input[type="datetime-local"] {
-  color-scheme: light;
-  min-height: 42px;
-  min-width: 0;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
+/* --------------------------------------------------------------------------
+   Global Click Tactile Micro-Animations
+   -------------------------------------------------------------------------- */
+button,
+a,
+input[type="checkbox"],
+select,
+.interactive-click {
+  transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1),
+              background-color 0.15s ease,
+              border-color 0.15s ease,
+              box-shadow 0.15s ease,
+              opacity 0.15s ease;
 }
 
-.dark input[type="date"],
-.dark input[type="time"],
-.dark input[type="datetime-local"] {
-  color-scheme: dark;
+button:active:not(:disabled),
+a:active,
+.interactive-click:active {
+  transform: scale(0.96) !important;
 }
 
-/* Fix iOS Safari Date & Time text alignment and height */
-input[type="date"]::-webkit-date-and-time-value,
-input[type="time"]::-webkit-date-and-time-value {
-  text-align: left;
-  min-height: 1.25rem;
-  line-height: normal;
+/* --------------------------------------------------------------------------
+   Custom Keyframe Animations
+   -------------------------------------------------------------------------- */
+@keyframes modalEntrance {
+  0% {
+    opacity: 0;
+    transform: scale(0.94) translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
-/* Clean calendar and clock icons in WebKit / Blink browsers */
-input[type="date"]::-webkit-calendar-picker-indicator,
-input[type="time"]::-webkit-calendar-picker-indicator,
-input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+@keyframes backdropFadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes tabSlideFade {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes columnStagger {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes gentleFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes pulseSproutGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(152, 229, 142, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(152, 229, 142, 0);
+  }
+}
+
+.animate-modal-in {
+  animation: modalEntrance 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-backdrop-in {
+  animation: backdropFadeIn 0.2s ease-out forwards;
+}
+
+.animate-tab-content {
+  animation: tabSlideFade 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-column-stagger {
+  animation: columnStagger 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-float-slow {
+  animation: gentleFloat 4s ease-in-out infinite;
+}
+
+.animate-sprout-pulse {
+  animation: pulseSproutGlow 2.5s infinite;
+}
+
+/* Sleek Scrollbar for Popups & Feeds */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f4f4f4;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbcece;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #6e797a;
+}
+
+/* --------------------------------------------------------------------------
+   Sprout Social Component Utilities
+   -------------------------------------------------------------------------- */
+
+/* Primary CTA Button (Sprout Green) */
+.btn-sprout-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #98e58e;
+  color: #040404;
+  font-weight: 700;
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-size: 14px;
+  line-height: 1.2;
+  transition: all 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
   cursor: pointer;
-  opacity: 0.6;
-  padding: 0;
-  margin-left: auto;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  border: 1px solid #98e58e;
 }
 
-.dark input[type="date"]::-webkit-calendar-picker-indicator,
-.dark input[type="time"]::-webkit-calendar-picker-indicator,
-.dark input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
+.btn-sprout-primary:hover:not(:disabled) {
+  background-color: #84d878;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(152, 229, 142, 0.35);
+}
+
+.btn-sprout-primary:active:not(:disabled) {
+  transform: scale(0.96) translateY(0) !important;
+}
+
+.btn-sprout-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Solid Dark Button */
+.btn-sprout-dark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #040404;
+  color: #ffffff;
+  font-weight: 700;
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-size: 14px;
+  line-height: 1.2;
+  transition: all 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+  cursor: pointer;
+  border: 1px solid #040404;
+}
+
+.btn-sprout-dark:hover:not(:disabled) {
+  background-color: #1a1a1a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(4, 4, 4, 0.2);
+}
+
+.btn-sprout-dark:active:not(:disabled) {
+  transform: scale(0.96) translateY(0) !important;
+}
+
+/* Outlined Ghost Button */
+.btn-sprout-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  color: #040404;
+  border: 1px solid #040404;
+  font-weight: 700;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 13px;
+  line-height: 1.2;
+  transition: all 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+  cursor: pointer;
+}
+
+.btn-sprout-ghost:hover:not(:disabled) {
+  background-color: #f4f4f4;
+  border-color: #040404;
+  transform: translateY(-1px);
+}
+
+.btn-sprout-ghost:active:not(:disabled) {
+  transform: scale(0.96) translateY(0) !important;
+}
+
+/* Inputs — Flat white, 1px smoke-gray border, 6px radius */
+.input-sprout {
+  background-color: #ffffff;
+  border: 1px solid #cbcece;
+  border-radius: 6px;
+  padding: 9px 14px;
+  font-size: 14px;
+  color: #040404;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  outline: none;
+}
+
+.input-sprout::placeholder {
+  color: #6e797a;
+}
+
+.input-sprout:focus {
+  border-color: #040404;
+  box-shadow: 0 0 0 3px rgba(152, 229, 142, 0.3);
+}
+
+/* Cards & Panels — 16px radius, 1px ash-gray border, 0 drop shadow */
+.card-sprout {
+  background-color: #ffffff;
+  border: 1px solid #d9d9d9;
+  border-radius: 16px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+/* Top Navigation Bar — Subtle 4px shadow */
+.nav-sprout {
+  background-color: #ffffff;
+  border: 1px solid #d9d9d9;
+  border-radius: 16px;
+  box-shadow: rgba(39, 51, 51, 0.16) 0px 4px 12px 0px;
+}
+
+/* Pill Badges — 24px radius */
+.badge-sprout-green {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #98e58e;
+  color: #040404;
+  font-weight: 700;
+  font-size: 12px;
+  border-radius: 24px;
+  padding: 3px 10px;
+  transition: transform 0.15s ease;
+}
+
+.badge-sprout-neutral {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #f4f4f4;
+  color: #040404;
+  font-weight: 700;
+  font-size: 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 24px;
+  padding: 3px 10px;
+  transition: transform 0.15s ease;
+}
+
+/* Text Links — Always 1px underline */
+.link-sprout {
+  color: #040404;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 700;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.link-sprout:hover {
   opacity: 0.75;
 }
 
-input[type="date"]::-webkit-calendar-picker-indicator:hover,
-input[type="time"]::-webkit-calendar-picker-indicator:hover {
-  opacity: 1;
-  transform: scale(1.08);
+/* Hero Dark Panel */
+.hero-reversed-panel {
+  background-color: #040404;
+  color: #ffffff;
+  border-radius: 16px;
+}
+
+/* Monospace Command Bar */
+.terminal-sprout {
+  background-color: #040404;
+  color: #ffffff;
+  border: 1px solid #162020;
+  border-radius: 12px;
+  font-family: var(--font-mono, monospace);
+}
+
+/* Liquid Progress Bar (Green rationed accent) */
+.liquid-progress-bar {
+  background: linear-gradient(90deg, #040404, #98e58e, #040404);
+  background-size: 200% 200%;
 }

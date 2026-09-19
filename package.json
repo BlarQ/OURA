@@ -1,5 +1,5 @@
 {
-  "name": "salaryflow",
+  "name": "ademanual",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,8 +9,12 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2",
     "@hookform/resolvers": "^5.9.1",
+    "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.112.4",
+    "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
     "lucide-react": "^1.38.0",
     "next": "16.3.3",
@@ -23,6 +27,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
