@@ -35,10 +35,16 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const isApiRoute = request.nextUrl.pathname.startsWith('/api');
   const isAuthRoute =
     request.nextUrl.pathname.startsWith('/login') ||
     request.nextUrl.pathname.startsWith('/signup') ||
     request.nextUrl.pathname.startsWith('/auth');
+
+  // Allow API routes to pass through cleanly
+  if (isApiRoute) {
+    return supabaseResponse;
+  }
 
   // If unauthenticated: redirect any non-auth page (including root /) to /login
   if (!user && !isAuthRoute) {

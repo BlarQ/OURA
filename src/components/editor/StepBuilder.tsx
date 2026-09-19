@@ -287,7 +287,7 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#ffffff] text-[#040404] font-sans pb-28 selection:bg-[#98e58e] selection:text-[#040404]">
+    <div className="min-h-screen bg-paper-white text-ink-black font-sans pb-28 selection:bg-sprout-green selection:text-ink-black">
       <DeleteConfirmModal
         isOpen={showDeleteModal}
         manualTitle={title || manual.title}
@@ -296,19 +296,19 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
       />
 
       {/* Top Navbar */}
-      <header className="sticky top-4 z-30 max-w-[1200px] mx-auto px-4 sm:px-6 my-3">
+      <header className="sticky top-4 z-30 max-w-300 mx-auto px-4 sm:px-6 my-3">
         <div className="nav-sprout h-16 px-5 flex items-center justify-between">
           <Link
             href="/dashboard"
-            className="text-sm font-bold text-[#040404] flex items-center gap-1.5 link-sprout"
+            className="text-sm font-bold text-ink-black flex items-center gap-1.5 link-sprout"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Back to Dashboard</span>
           </Link>
 
           <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-[#98e58e]" />
-            <span className="text-sm font-extrabold text-[#040404]">
+            <div className="h-2 w-2 rounded-full bg-sprout-green" />
+            <span className="text-sm font-extrabold text-ink-black">
               Playbook Step Editor
             </span>
           </div>
@@ -317,7 +317,7 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
             <button
               type="button"
               onClick={() => setShowDeleteModal(true)}
-              className="p-2 text-[#6e797a] hover:text-red-600 hover:bg-red-50 rounded-[6px] transition cursor-pointer border border-transparent hover:border-red-200"
+              className="p-2 text-pewter hover:text-red-600 hover:bg-red-50 rounded-md transition cursor-pointer border border-transparent hover:border-red-200"
               title="Delete Manual"
             >
               <Trash2 className="h-4 w-4" />
@@ -343,9 +343,9 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
       </header>
 
       {/* Main Builder Container (Max-width 1200px) */}
-      <main className="max-w-[960px] mx-auto px-4 sm:px-6 pt-6 space-y-6">
+      <main className="max-w-240 mx-auto px-4 sm:px-6 pt-6 space-y-6">
         {saveError && (
-          <div className="p-4 rounded-[6px] bg-red-50 border border-red-200 flex items-start gap-2.5 text-xs text-red-700">
+          <div className="p-4 rounded-md bg-red-50 border border-red-200 flex items-start gap-2.5 text-xs text-red-700">
             <AlertCircle className="h-4 w-4 shrink-0 text-red-600 mt-0.5" />
             <span className="font-semibold">{saveError}</span>
           </div>
@@ -354,7 +354,7 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
         {/* Manual Title Box & Auto-save Status (16px radius, 1px ash-gray border) */}
         <div className="card-sprout p-6 sm:p-8 space-y-3">
           <div className="space-y-1">
-            <label className="text-[12px] font-extrabold uppercase tracking-wider text-[#6e797a]">
+            <label className="text-[12px] font-extrabold uppercase tracking-wider text-pewter">
               Playbook Title
             </label>
             <input
@@ -362,12 +362,12 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Cisco Core Switch VLAN Configuration & Trunk Setup"
-              className="w-full text-2xl sm:text-3xl font-extrabold text-[#040404] placeholder:text-[#cbcece] border-b border-[#d9d9d9] hover:border-[#040404] focus:border-[#040404] focus:outline-none pb-2 transition-colors bg-transparent"
+              className="w-full text-2xl sm:text-3xl font-extrabold text-ink-black placeholder:text-smoke-gray border-b border-ash-gray hover:border-ink-black focus:border-ink-black focus:outline-none pb-2 transition-colors bg-transparent"
             />
           </div>
 
-          <div className="flex items-center gap-2 text-xs font-bold text-[#6e797a] pt-1">
-            <Check className="h-3.5 w-3.5 text-[#040404]" />
+          <div className="flex items-center gap-2 text-xs font-bold text-pewter pt-1">
+            <Check className="h-3.5 w-3.5 text-ink-black" />
             <span>Database Status: {lastSavedTime}</span>
           </div>
         </div>
@@ -377,11 +377,11 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
           {steps.map((step, idx) => (
             <div
               key={idx}
-              className="card-sprout p-6 sm:p-8 space-y-5 transition-colors hover:border-[#040404]"
+              className="card-sprout p-6 sm:p-8 space-y-5 transition-colors hover:border-ink-black"
             >
               {/* Step Header */}
-              <div className="flex items-center justify-between border-b border-[#d9d9d9] pb-4">
-                <div className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-[6px] bg-[#040404] text-[#ffffff] font-extrabold text-xs tracking-wider uppercase">
+              <div className="flex items-center justify-between border-b border-ash-gray pb-4">
+                <div className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-md bg-ink-black text-paper-white font-extrabold text-xs tracking-wider uppercase">
                   STEP {idx + 1}
                 </div>
 
@@ -390,7 +390,7 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
                     type="button"
                     disabled={idx === 0}
                     onClick={() => moveStep(idx, 'up')}
-                    className="p-1.5 text-[#6e797a] hover:text-[#040404] hover:bg-[#f4f4f4] disabled:opacity-30 disabled:cursor-not-allowed rounded-[6px] transition cursor-pointer"
+                    className="p-1.5 text-pewter hover:text-ink-black hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed rounded-md transition cursor-pointer"
                     title="Move Step Up"
                   >
                     <ChevronUp className="h-4 w-4" />
@@ -399,7 +399,7 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
                     type="button"
                     disabled={idx === steps.length - 1}
                     onClick={() => moveStep(idx, 'down')}
-                    className="p-1.5 text-[#6e797a] hover:text-[#040404] hover:bg-[#f4f4f4] disabled:opacity-30 disabled:cursor-not-allowed rounded-[6px] transition cursor-pointer"
+                    className="p-1.5 text-pewter hover:text-ink-black hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed rounded-md transition cursor-pointer"
                     title="Move Step Down"
                   >
                     <ChevronDown className="h-4 w-4" />
@@ -408,7 +408,7 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
                     <button
                       type="button"
                       onClick={() => removeStep(idx)}
-                      className="p-1.5 text-[#6e797a] hover:text-red-600 hover:bg-red-50 rounded-[6px] transition cursor-pointer ml-1"
+                      className="p-1.5 text-pewter hover:text-red-600 hover:bg-red-50 rounded-md transition cursor-pointer ml-1"
                       title="Delete Step"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -419,7 +419,7 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
 
               {/* Step Title Input */}
               <div className="space-y-1.5">
-                <label className="text-[13px] font-extrabold text-[#040404]">
+                <label className="text-[13px] font-extrabold text-ink-black">
                   Step Title
                 </label>
                 <input
@@ -433,7 +433,7 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
 
               {/* Step Description Input */}
               <div className="space-y-1.5">
-                <label className="text-[13px] font-extrabold text-[#040404]">
+                <label className="text-[13px] font-extrabold text-ink-black">
                   Description & Command Lines
                 </label>
                 <textarea
@@ -446,17 +446,17 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
               </div>
 
               {/* Media Upload & Preview Zone */}
-              <div className="space-y-2 pt-2 border-t border-[#d9d9d9]">
-                <label className="text-[13px] font-extrabold text-[#040404] block">
+              <div className="space-y-2 pt-2 border-t border-ash-gray">
+                <label className="text-[13px] font-extrabold text-ink-black block">
                   Media Attachment
                 </label>
 
                 {step.media_url ? (
                   /* Attached Media Preview */
-                  <div className="p-4 rounded-[16px] bg-[#f4f4f4] border border-[#d9d9d9] space-y-3">
+                  <div className="p-4 rounded-2xl bg-slate-100 border border-ash-gray space-y-3">
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-[6px] bg-[#040404] text-[#ffffff] flex items-center justify-center shrink-0">
+                        <div className="h-9 w-9 rounded-md bg-ink-black text-paper-white flex items-center justify-center shrink-0">
                           {step.media_type === 'video' ? (
                             <Video className="h-4 w-4" />
                           ) : (
@@ -464,10 +464,10 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
                           )}
                         </div>
                         <div>
-                          <span className="text-xs font-bold text-[#040404] block truncate max-w-xs sm:max-w-md">
+                          <span className="text-xs font-bold text-ink-black block truncate max-w-xs sm:max-w-md">
                             {step.media_file_name || (step.media_type === 'video' ? 'Video Attachment' : 'Image Attachment')}
                           </span>
-                          <span className="text-[11px] text-[#6e797a] font-bold">
+                          <span className="text-[11px] text-pewter font-bold">
                             ✓ {step.media_file_size || 'Attached to step'}
                           </span>
                         </div>
@@ -481,7 +481,7 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
                           updateStepField(idx, 'media_file_name', undefined);
                           updateStepField(idx, 'media_file_size', undefined);
                         }}
-                        className="p-1.5 text-[#6e797a] hover:text-red-600 hover:bg-white rounded-[6px] transition cursor-pointer"
+                        className="p-1.5 text-pewter hover:text-red-600 hover:bg-white rounded-md transition cursor-pointer"
                         title="Remove attachment"
                       >
                         <X className="h-4 w-4" />
@@ -489,22 +489,22 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
                     </div>
 
                     {/* Media Thumbnail / Video Player */}
-                    <div className="pt-2 border-t border-[#d9d9d9]">
+                    <div className="pt-2 border-t border-ash-gray">
                       {step.media_type === 'video' ? (
-                        <div className="relative rounded-[16px] overflow-hidden bg-black max-w-lg border border-[#d9d9d9]">
+                        <div className="relative rounded-2xl overflow-hidden bg-black max-w-lg border border-ash-gray">
                           <video
                             controls
                             src={step.media_url}
-                            className="w-full max-h-64 object-contain rounded-[16px]"
+                            className="w-full max-h-64 object-contain rounded-2xl"
                           />
                         </div>
                       ) : (
-                        <div className="relative rounded-[16px] overflow-hidden bg-white max-w-sm border border-[#d9d9d9]">
+                        <div className="relative rounded-2xl overflow-hidden bg-white max-w-sm border border-ash-gray">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={step.media_url}
                             alt={step.title}
-                            className="w-full max-h-56 object-cover rounded-[16px]"
+                            className="w-full max-h-56 object-cover rounded-2xl"
                           />
                         </div>
                       )}
@@ -549,24 +549,24 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
 
                     {activeUploadIdx === idx ? (
                       /* Active Upload Progress Box */
-                      <div className="p-6 rounded-[16px] bg-[#f4f4f4] border border-[#d9d9d9] text-center space-y-3">
-                        <div className="flex items-center justify-center gap-2 text-xs font-bold text-[#040404]">
+                      <div className="p-6 rounded-2xl bg-slate-100 border border-ash-gray text-center space-y-3">
+                        <div className="flex items-center justify-center gap-2 text-xs font-bold text-ink-black">
                           <Loader2 className="h-4 w-4 animate-spin" />
                           <span>{uploadStatusText}</span>
                         </div>
-                        <div className="w-full bg-[#d9d9d9] rounded-[6px] h-2 overflow-hidden">
+                        <div className="w-full bg-ash-gray rounded-md h-2 overflow-hidden">
                           <div
-                            className="h-full bg-[#040404] transition-all duration-300"
+                            className="h-full bg-ink-black transition-all duration-300"
                             style={{ width: `${uploadPercent}%` }}
                           />
                         </div>
-                        <span className="text-[11px] text-[#6e797a] font-bold block">
+                        <span className="text-[11px] text-pewter font-bold block">
                           {uploadPercent}% Completed
                         </span>
                       </div>
                     ) : (
                       /* 3 Clean Action Triggers */
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-[16px] border border-dashed border-[#cbcece] bg-[#ffffff]">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-2xl border border-dashed border-smoke-gray bg-paper-white">
                         <button
                           type="button"
                           onClick={() => cameraInputRefs.current[idx]?.click()}
@@ -606,7 +606,7 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
         <button
           type="button"
           onClick={addStep}
-          className="w-full py-4 border border-dashed border-[#040404] hover:bg-[#f4f4f4] rounded-[16px] text-[#040404] font-extrabold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
+          className="w-full py-4 border border-dashed border-ink-black hover:bg-slate-100 rounded-2xl text-ink-black font-extrabold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
         >
           <Plus className="h-4 w-4" />
           <span>Add Next Step (Step {steps.length + 1})</span>

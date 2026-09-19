@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import {
   Lock,
@@ -14,12 +14,14 @@ import {
   User,
   Eye,
   EyeOff,
+  ShieldCheck,
 } from 'lucide-react';
 import SecretCodeModal from '@/components/auth/SecretCodeModal';
 import BrandLogo from '@/components/common/BrandLogo';
 
-export default function SignupPage() {
+function SignupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [showGateModal, setShowGateModal] = useState(false);
   const [fullName, setFullName] = useState('');
@@ -32,16 +34,33 @@ export default function SignupPage() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   useEffect(() => {
+    // Check URL search params for email
+    const paramEmail = searchParams.get('email');
+    if (paramEmail) {
+      setEmail(decodeURIComponent(paramEmail));
+    }
+
     const authGate =
       typeof window !== 'undefined'
         ? sessionStorage.getItem('mymanual_auth_gate')
         : null;
-    if (authGate && authGate.startsWith('1997_authorized_')) {
+
+    if (
+      authGate &&
+      (authGate.startsWith('otp_authorized_') ||
+        authGate.startsWith('1997_authorized_'))
+    ) {
       setIsAuthorized(true);
+      // Extract email from token if not already set
+      if (!paramEmail && authGate.includes('@')) {
+        const parts = authGate.split('_');
+        const tokenEmail = parts[parts.length - 1];
+        if (tokenEmail) setEmail(decodeURIComponent(tokenEmail));
+      }
     } else {
       setShowGateModal(true);
     }
-  }, []);
+  }, [searchParams]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +81,32 @@ export default function SignupPage() {
 
     try {
       const supabase = createClient();
+
+      // Check if session is already active from OTP verification
+      const { data: sessionData } = await supabase.auth.getSession();
+
+      if (sessionData?.session?.user) {
+        // Update password and metadata for the authenticated user
+        const { error: updateError } = await supabase.auth.updateUser({
+          password,
+          data: {
+            full_name: fullName.trim(),
+          },
+        });
+
+        if (updateError) {
+          setErrorMsg(updateError.message);
+          setLoading(false);
+          return;
+        }
+
+        sessionStorage.removeItem('mymanual_auth_gate');
+        router.push('/dashboard');
+        router.refresh();
+        return;
+      }
+
+      // Standard signup flow
       const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
@@ -86,7 +131,7 @@ export default function SignupPage() {
       } else {
         sessionStorage.removeItem('mymanual_auth_gate');
         setSuccessMsg(
-          'Account created! Please check your email to confirm your account.'
+          'Administrator account created successfully! Please check your email to confirm your account.'
         );
       }
     } catch (err: any) {
@@ -105,13 +150,16 @@ export default function SignupPage() {
       <div className="w-full text-center py-12 space-y-4">
         <SecretCodeModal
           isOpen={showGateModal}
-          onClose={() => setShowGateModal(false)}
+          onClose={() => {
+            setShowGateModal(false);
+            router.push('/login');
+          }}
           onSuccess={() => {
             setIsAuthorized(true);
             setShowGateModal(false);
           }}
         />
-        <div className="text-[#6e797a] text-xs flex items-center justify-center gap-1.5 font-bold">
+        <div className="text-pewter text-xs flex items-center justify-center gap-1.5 font-bold">
           <Lock className="h-3.5 w-3.5" />
           <span>Verifying security authorization...</span>
         </div>
@@ -125,38 +173,39 @@ export default function SignupPage() {
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-2.5 pb-1">
             <BrandLogo size="md" />
-            <span className="text-xl font-extrabold tracking-tight text-[#040404]">
+            <span className="text-xl font-extrabold tracking-tight text-ink-black">
               AdeManual
             </span>
           </div>
 
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-[24px] bg-[#98e58e] text-xs font-bold text-[#040404]">
-            Authorized Registration (1997)
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-3xl bg-sprout-green text-xs font-bold text-ink-black shadow-2xs">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            <span>OTP Security Verified</span>
           </div>
 
-          <h1 className="text-2xl font-extrabold text-[#040404] tracking-tight">
+          <h1 className="text-2xl font-extrabold text-ink-black tracking-tight">
             Create Administrator Account
           </h1>
-          <p className="text-xs text-[#6e797a]">
+          <p className="text-xs text-pewter">
             Set up your standard IT procedure documentation profile
           </p>
         </div>
 
         {errorMsg && (
-          <div className="p-3.5 rounded-[6px] bg-red-50 border border-red-200 flex items-start gap-2.5 text-xs text-red-700">
+          <div className="p-3.5 rounded-md bg-red-50 border border-red-200 flex items-start gap-2.5 text-xs text-red-700">
             <AlertCircle className="h-4 w-4 shrink-0 text-red-600 mt-0.5" />
             <span className="font-semibold">{errorMsg}</span>
           </div>
         )}
 
         {successMsg ? (
-          <div className="p-6 rounded-[16px] bg-[#ffffff] border border-[#d9d9d9] text-center space-y-4">
-            <div className="w-12 h-12 rounded-full bg-[#98e58e] text-[#040404] mx-auto flex items-center justify-center">
+          <div className="p-6 rounded-2xl bg-paper-white border border-ash-gray text-center space-y-4">
+            <div className="w-12 h-12 rounded-full bg-sprout-green text-ink-black mx-auto flex items-center justify-center">
               <CheckCircle2 className="h-6 w-6" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-base font-extrabold text-[#040404]">Registration Pending Confirmation</h3>
-              <p className="text-xs text-[#6e797a]">{successMsg}</p>
+              <h3 className="text-base font-extrabold text-ink-black">Registration Pending Confirmation</h3>
+              <p className="text-xs text-pewter">{successMsg}</p>
             </div>
             <Link
               href="/login"
@@ -169,11 +218,12 @@ export default function SignupPage() {
           <form onSubmit={handleSignup} className="space-y-4">
             {/* Full Name Field */}
             <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-[#040404] block">
+              <label className="text-[13px] font-bold text-ink-black block">
                 Full Name
               </label>
               <input
                 type="text"
+                required
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="Alex Rivera"
@@ -183,7 +233,7 @@ export default function SignupPage() {
 
             {/* Email Field */}
             <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-[#040404] block">
+              <label className="text-[13px] font-bold text-ink-black block">
                 Work Email Address
               </label>
               <input
@@ -200,7 +250,7 @@ export default function SignupPage() {
 
             {/* Password Field */}
             <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-[#040404] block">
+              <label className="text-[13px] font-bold text-ink-black block">
                 Password
               </label>
               <div className="relative">
@@ -216,7 +266,7 @@ export default function SignupPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#6e797a] hover:text-[#040404] transition cursor-pointer"
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-pewter hover:text-ink-black transition cursor-pointer"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? (
@@ -230,7 +280,7 @@ export default function SignupPage() {
 
             {/* Confirm Password Field */}
             <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-[#040404] block">
+              <label className="text-[13px] font-bold text-ink-black block">
                 Confirm Password
               </label>
               <input
@@ -275,5 +325,20 @@ export default function SignupPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="w-full text-center py-12 text-pewter text-xs flex items-center justify-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span>Loading security verification...</span>
+        </div>
+      }
+    >
+      <SignupForm />
+    </Suspense>
   );
 }

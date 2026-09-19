@@ -190,7 +190,7 @@ export default function CopyWeekModal({
 
   const modalContent = (
     <div
-      className="fixed inset-0 z-[99999] w-screen h-screen min-h-[100dvh] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto overscroll-contain animate-backdrop-in"
+      className="fixed inset-0 z-99999 w-screen h-screen min-h-dvh flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto overscroll-contain animate-backdrop-in"
       onClick={(e) => {
         if (e.target === e.currentTarget && !isCopying) {
           onClose();
@@ -200,14 +200,14 @@ export default function CopyWeekModal({
       aria-modal="true"
     >
       <div
-        className="relative w-full max-w-md my-auto bg-[#ffffff] border border-[#d9d9d9] rounded-[16px] p-5 sm:p-6 space-y-4 text-[#040404] max-h-[calc(100dvh-2rem)] overflow-y-auto custom-scrollbar animate-modal-in shadow-2xl"
+        className="relative w-full max-w-md my-auto bg-paper-white border border-ash-gray rounded-2xl p-5 sm:p-6 space-y-4 text-ink-black max-h-[calc(100dvh-2rem)] overflow-y-auto custom-scrollbar animate-modal-in shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
           onClick={onClose}
           disabled={isCopying}
-          className="absolute top-3.5 right-3.5 p-1.5 text-[#6e797a] hover:text-[#040404] rounded-[6px] hover:bg-[#f4f4f4] transition cursor-pointer disabled:opacity-50"
+          className="absolute top-3.5 right-3.5 p-1.5 text-pewter hover:text-ink-black rounded-md hover:bg-slate-100 transition cursor-pointer disabled:opacity-50"
           aria-label="Close modal"
         >
           <X className="h-4 w-4" />
@@ -219,16 +219,16 @@ export default function CopyWeekModal({
             <Repeat className="h-3 w-3" />
             <span>Weekly Schedule Duplication</span>
           </div>
-          <h2 className="text-xl font-extrabold text-[#040404] tracking-tight">
+          <h2 className="text-xl font-extrabold text-ink-black tracking-tight">
             Copy Activities to Another Week
           </h2>
-          <p className="text-[11px] text-[#6e797a]">
+          <p className="text-[11px] text-pewter">
             Duplicate recurring weekday tasks without re-typing.
           </p>
         </div>
 
         {error && (
-          <div className="p-2.5 rounded-[6px] bg-red-50 border border-red-200 text-xs font-bold text-red-700 flex items-start gap-2">
+          <div className="p-2.5 rounded-md bg-red-50 border border-red-200 text-xs font-bold text-red-700 flex items-start gap-2">
             <AlertCircle className="h-3.5 w-3.5 shrink-0 text-red-600 mt-0.5" />
             <span>{error}</span>
           </div>
@@ -238,9 +238,9 @@ export default function CopyWeekModal({
         <div className="space-y-3">
           {/* 1. Source Week */}
           <div className="space-y-1">
-            <label className="text-xs font-extrabold text-[#040404] flex items-center justify-between">
+            <label className="text-xs font-extrabold text-ink-black flex items-center justify-between">
               <span>1. Copy FROM (Source Week)</span>
-              <span className="text-[10px] text-[#6e797a] font-normal">Source schedule</span>
+              <span className="text-[10px] text-pewter font-normal">Source schedule</span>
             </label>
             <select
               value={sourceOffset}
@@ -259,22 +259,22 @@ export default function CopyWeekModal({
           </div>
 
           {/* Source Activities Preview Box */}
-          <div className="p-2.5 rounded-[8px] bg-[#f8fafc] border border-[#d9d9d9] space-y-1.5">
+          <div className="p-2.5 rounded-lg bg-slate-50 border border-ash-gray space-y-1.5">
             <div className="flex items-center justify-between text-[11px]">
-              <span className="font-extrabold text-[#040404] flex items-center gap-1">
-                <Calendar className="h-3 w-3 text-[#040404]" />
+              <span className="font-extrabold text-ink-black flex items-center gap-1">
+                <Calendar className="h-3 w-3 text-ink-black" />
                 <span>Source Preview</span>
               </span>
               {loadingPreview ? (
-                <span className="text-[10px] text-[#6e797a] flex items-center gap-1">
+                <span className="text-[10px] text-pewter flex items-center gap-1">
                   <Loader2 className="h-2.5 w-2.5 animate-spin" /> Checking...
                 </span>
               ) : (
                 <span
-                  className={`text-[10px] font-bold px-1.5 py-0.5 rounded-[24px] ${
+                  className={`text-[10px] font-bold px-1.5 py-0.5 rounded-3xl ${
                     sourceActivities.length > 0
-                      ? 'bg-[#98e58e] text-[#040404]'
-                      : 'bg-[#e2e8f0] text-[#64748b]'
+                      ? 'bg-sprout-green text-ink-black'
+                      : 'bg-slate-200 text-slate-500'
                   }`}
                 >
                   {sourceActivities.length}{' '}
@@ -288,13 +288,13 @@ export default function CopyWeekModal({
                 {sourceActivities.slice(0, 3).map((act) => (
                   <div
                     key={act.id}
-                    className="text-[10px] font-semibold text-[#040404] bg-white px-2 py-0.5 rounded-[4px] border border-[#e2e8f0] truncate"
+                    className="text-[10px] font-semibold text-ink-black bg-white px-2 py-0.5 rounded-sm border border-slate-200 truncate"
                   >
                     • {act.title}
                   </div>
                 ))}
                 {sourceActivities.length > 3 && (
-                  <p className="text-[9px] text-[#6e797a] font-bold pl-1">
+                  <p className="text-[9px] text-pewter font-bold pl-1">
                     + {sourceActivities.length - 3} more
                   </p>
                 )}
@@ -302,7 +302,7 @@ export default function CopyWeekModal({
             )}
 
             {!loadingPreview && sourceActivities.length === 0 && (
-              <p className="text-[10px] text-[#6e797a]">
+              <p className="text-[10px] text-pewter">
                 ⚠️ No activities in this source week.
               </p>
             )}
@@ -310,16 +310,16 @@ export default function CopyWeekModal({
 
           {/* Arrow Indicator */}
           <div className="flex items-center justify-center py-0.5">
-            <div className="h-6 w-6 rounded-full bg-[#f4f4f4] border border-[#d9d9d9] flex items-center justify-center text-[#040404]">
+            <div className="h-6 w-6 rounded-full bg-slate-100 border border-ash-gray flex items-center justify-center text-ink-black">
               <ArrowRight className="h-3.5 w-3.5" />
             </div>
           </div>
 
           {/* 2. Target Week */}
           <div className="space-y-1">
-            <label className="text-xs font-extrabold text-[#040404] flex items-center justify-between">
+            <label className="text-xs font-extrabold text-ink-black flex items-center justify-between">
               <span>2. Copy TO (Target Week)</span>
-              <span className="text-[10px] text-[#6e797a] font-normal">Destination schedule</span>
+              <span className="text-[10px] text-pewter font-normal">Destination schedule</span>
             </label>
             <select
               value={targetOffset}
@@ -339,16 +339,16 @@ export default function CopyWeekModal({
 
           {/* Option: Reset Completion Checkboxes */}
           <div className="pt-0.5">
-            <label className="flex items-start gap-2 cursor-pointer select-none text-[11px] text-[#040404] font-bold p-2.5 rounded-[6px] bg-[#f4f4f4] border border-[#d9d9d9] hover:border-[#040404] transition">
+            <label className="flex items-start gap-2 cursor-pointer select-none text-[11px] text-ink-black font-bold p-2.5 rounded-md bg-slate-100 border border-ash-gray hover:border-ink-black transition">
               <input
                 type="checkbox"
                 checked={resetCompleted}
                 onChange={(e) => setResetCompleted(e.target.checked)}
-                className="mt-0.5 h-3.5 w-3.5 rounded accent-[#040404]"
+                className="mt-0.5 h-3.5 w-3.5 rounded accent-ink-black"
               />
               <div>
                 <span className="block">Reset completion checkboxes</span>
-                <span className="text-[10px] text-[#6e797a] font-normal block">
+                <span className="text-[10px] text-pewter font-normal block">
                   All copied activities will start as pending for the new week.
                 </span>
               </div>
@@ -357,7 +357,7 @@ export default function CopyWeekModal({
         </div>
 
         {/* Action Buttons */}
-        <div className="pt-2.5 border-t border-[#d9d9d9] flex items-center justify-end gap-2">
+        <div className="pt-2.5 border-t border-ash-gray flex items-center justify-end gap-2">
           <button
             type="button"
             onClick={onClose}

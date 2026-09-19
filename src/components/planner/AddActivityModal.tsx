@@ -118,7 +118,7 @@ export default function AddActivityModal({
 
   const modalContent = (
     <div
-      className="fixed inset-0 z-[99999] w-screen h-screen min-h-[100dvh] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto overscroll-contain animate-backdrop-in"
+      className="fixed inset-0 z-99999 w-screen h-screen min-h-dvh flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto overscroll-contain animate-backdrop-in"
       onClick={(e) => {
         if (e.target === e.currentTarget && !isSubmitting) {
           onClose();
@@ -128,14 +128,14 @@ export default function AddActivityModal({
       aria-modal="true"
     >
       <div
-        className="relative w-full max-w-md my-auto bg-[#ffffff] border border-[#d9d9d9] rounded-[16px] p-5 sm:p-6 space-y-4 text-[#040404] max-h-[calc(100dvh-2rem)] overflow-y-auto custom-scrollbar animate-modal-in shadow-2xl"
+        className="relative w-full max-w-md my-auto bg-paper-white border border-ash-gray rounded-2xl p-5 sm:p-6 space-y-4 text-ink-black max-h-[calc(100dvh-2rem)] overflow-y-auto custom-scrollbar animate-modal-in shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
           onClick={onClose}
           disabled={isSubmitting}
-          className="absolute top-3.5 right-3.5 p-1.5 text-[#6e797a] hover:text-[#040404] rounded-[6px] hover:bg-[#f4f4f4] transition cursor-pointer disabled:opacity-50"
+          className="absolute top-3.5 right-3.5 p-1.5 text-pewter hover:text-ink-black rounded-md hover:bg-slate-100 transition cursor-pointer disabled:opacity-50"
           aria-label="Close modal"
         >
           <X className="h-4 w-4" />
@@ -147,16 +147,16 @@ export default function AddActivityModal({
             <Calendar className="h-3 w-3" />
             <span>{dayName}, {formattedDateStr}</span>
           </div>
-          <h2 className="text-xl font-extrabold text-[#040404] tracking-tight">
+          <h2 className="text-xl font-extrabold text-ink-black tracking-tight">
             {editingActivity ? 'Edit Activity' : 'Plan Activity'}
           </h2>
-          <p className="text-[11px] text-[#6e797a]">
+          <p className="text-[11px] text-pewter">
             Schedule tasks, maintenance, or link a procedure playbook.
           </p>
         </div>
 
         {error && (
-          <div className="p-2.5 rounded-[6px] bg-red-50 border border-red-200 text-xs font-bold text-red-700 flex items-center gap-2">
+          <div className="p-2.5 rounded-md bg-red-50 border border-red-200 text-xs font-bold text-red-700 flex items-center gap-2">
             <AlertCircle className="h-3.5 w-3.5 shrink-0" />
             <span>{error}</span>
           </div>
@@ -166,7 +166,7 @@ export default function AddActivityModal({
         <form onSubmit={handleSubmit} className="space-y-3.5">
           {/* Activity Title */}
           <div className="space-y-1">
-            <label className="text-xs font-extrabold text-[#040404] block">
+            <label className="text-xs font-extrabold text-ink-black block">
               Activity Title <span className="text-red-600">*</span>
             </label>
             <input
@@ -184,7 +184,7 @@ export default function AddActivityModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Time Slot */}
             <div className="space-y-1">
-              <label className="text-xs font-extrabold text-[#040404] block">
+              <label className="text-xs font-extrabold text-ink-black block">
                 Time Slot
               </label>
               <select
@@ -202,17 +202,17 @@ export default function AddActivityModal({
 
             {/* Priority Level */}
             <div className="space-y-1">
-              <label className="text-xs font-extrabold text-[#040404] block">
+              <label className="text-xs font-extrabold text-ink-black block">
                 Priority
               </label>
               <div className="grid grid-cols-3 gap-1">
                 <button
                   type="button"
                   onClick={() => setPriority('routine')}
-                  className={`py-1.5 px-1 rounded-[6px] text-[11px] font-bold border transition cursor-pointer text-center ${
+                  className={`py-1.5 px-1 rounded-md text-[11px] font-bold border transition cursor-pointer text-center ${
                     priority === 'routine'
-                      ? 'bg-[#f4f4f4] text-[#040404] border-[#040404]'
-                      : 'bg-[#ffffff] text-[#6e797a] border-[#d9d9d9] hover:border-[#040404]'
+                      ? 'bg-slate-100 text-ink-black border-ink-black'
+                      : 'bg-paper-white text-pewter border-ash-gray hover:border-ink-black'
                   }`}
                 >
                   Routine
@@ -220,10 +220,10 @@ export default function AddActivityModal({
                 <button
                   type="button"
                   onClick={() => setPriority('standard')}
-                  className={`py-1.5 px-1 rounded-[6px] text-[11px] font-bold border transition cursor-pointer text-center ${
+                  className={`py-1.5 px-1 rounded-md text-[11px] font-bold border transition cursor-pointer text-center ${
                     priority === 'standard'
-                      ? 'bg-[#040404] text-[#ffffff] border-[#040404]'
-                      : 'bg-[#ffffff] text-[#6e797a] border-[#d9d9d9] hover:border-[#040404]'
+                      ? 'bg-ink-black text-paper-white border-ink-black'
+                      : 'bg-paper-white text-pewter border-ash-gray hover:border-ink-black'
                   }`}
                 >
                   Std
@@ -231,10 +231,10 @@ export default function AddActivityModal({
                 <button
                   type="button"
                   onClick={() => setPriority('critical')}
-                  className={`py-1.5 px-1 rounded-[6px] text-[11px] font-bold border transition cursor-pointer text-center ${
+                  className={`py-1.5 px-1 rounded-md text-[11px] font-bold border transition cursor-pointer text-center ${
                     priority === 'critical'
-                      ? 'bg-red-600 text-[#ffffff] border-red-600'
-                      : 'bg-[#ffffff] text-[#6e797a] border-[#d9d9d9] hover:border-red-500'
+                      ? 'bg-red-600 text-paper-white border-red-600'
+                      : 'bg-paper-white text-pewter border-ash-gray hover:border-red-500'
                   }`}
                 >
                   Critical
@@ -245,9 +245,9 @@ export default function AddActivityModal({
 
           {/* Link Procedure Manual (Optional) */}
           <div className="space-y-1">
-            <label className="text-xs font-extrabold text-[#040404] flex items-center justify-between">
+            <label className="text-xs font-extrabold text-ink-black flex items-center justify-between">
               <span>Link Procedure Playbook</span>
-              <span className="text-[10px] text-[#6e797a] font-normal">Optional</span>
+              <span className="text-[10px] text-pewter font-normal">Optional</span>
             </label>
             <select
               value={manualId}
@@ -265,7 +265,7 @@ export default function AddActivityModal({
 
           {/* Execution Notes */}
           <div className="space-y-1">
-            <label className="text-xs font-extrabold text-[#040404] block">
+            <label className="text-xs font-extrabold text-ink-black block">
               Execution Notes (Optional)
             </label>
             <textarea
@@ -278,7 +278,7 @@ export default function AddActivityModal({
           </div>
 
           {/* Action Buttons */}
-          <div className="pt-2 border-t border-[#d9d9d9] flex items-center justify-end gap-2">
+          <div className="pt-2 border-t border-ash-gray flex items-center justify-end gap-2">
             <button
               type="button"
               onClick={onClose}

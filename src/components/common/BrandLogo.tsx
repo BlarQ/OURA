@@ -61,7 +61,7 @@ export default function BrandLogo({
       {/* Generated Logo Image Badge */}
       <div
         style={{ width: `${pixelSize}px`, height: `${pixelSize}px` }}
-        className={`relative overflow-hidden rounded-[8px] shrink-0 border border-[#cbcece]/60 shadow-xs transition-transform duration-200 hover:scale-105 ${iconClassName}`}
+        className={`relative overflow-hidden rounded-lg shrink-0 border border-smoke-gray/60 shadow-xs transition-transform duration-200 hover:scale-105 ${iconClassName}`}
       >
         <Image
           src={logoSrc}
@@ -69,16 +69,16 @@ export default function BrandLogo({
           width={pixelSize * 2}
           height={pixelSize * 2}
           priority
-          className="w-full h-full object-cover rounded-[8px]"
+          className="w-full h-full object-cover rounded-lg"
         />
       </div>
 
       {showWordmark && (
         <div className="flex flex-col">
-          <span className="text-lg sm:text-xl font-extrabold tracking-tight text-[#040404] leading-tight">
+          <span className="text-lg sm:text-xl font-extrabold tracking-tight text-ink-black leading-tight">
             AdeManual
           </span>
-          <span className="text-[10px] uppercase font-bold text-[#6e797a] tracking-wider">
+          <span className="text-[10px] uppercase font-bold text-pewter tracking-wider">
             IT Operations & Procedures
           </span>
         </div>

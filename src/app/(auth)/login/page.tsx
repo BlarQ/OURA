@@ -76,7 +76,7 @@ export default function LoginPage() {
         <div className="flex flex-col items-center justify-center text-center space-y-3">
           <div className="flex items-center gap-2.5">
             <BrandLogo size="lg" />
-            <span className="text-2xl font-extrabold tracking-tight text-[#040404]">
+            <span className="text-2xl font-extrabold tracking-tight text-ink-black">
               AdeManual
             </span>
           </div>
@@ -89,10 +89,10 @@ export default function LoginPage() {
           </div>
 
           <div className="space-y-1 pt-1">
-            <h1 className="text-[28px] font-extrabold text-[#040404] tracking-tight leading-tight">
+            <h1 className="text-[28px] font-extrabold text-ink-black tracking-tight leading-tight">
               Sign in to your workspace
             </h1>
-            <p className="text-sm text-[#6e797a]">
+            <p className="text-sm text-pewter">
               IT Operating Procedures & Standard Execution Playbooks
             </p>
           </div>
@@ -100,7 +100,7 @@ export default function LoginPage() {
 
         {/* Error Alert */}
         {errorMsg && (
-          <div className="p-3.5 rounded-[6px] bg-red-50 border border-red-200 flex items-start gap-2.5 text-xs text-red-700">
+          <div className="p-3.5 rounded-md bg-red-50 border border-red-200 flex items-start gap-2.5 text-xs text-red-700">
             <AlertCircle className="h-4 w-4 shrink-0 text-red-600 mt-0.5" />
             <span className="font-semibold leading-relaxed">{errorMsg}</span>
           </div>
@@ -110,7 +110,7 @@ export default function LoginPage() {
         <form onSubmit={handleLogin} className="space-y-4">
           {/* Email Field */}
           <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-[#040404] block">
+            <label className="text-[13px] font-bold text-ink-black block">
               Work Email Address
             </label>
             <div className="relative">
@@ -135,7 +135,7 @@ export default function LoginPage() {
           {/* Password Field */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="text-[13px] font-bold text-[#040404]">
+              <label className="text-[13px] font-bold text-ink-black">
                 Password
               </label>
             </div>
@@ -157,7 +157,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#6e797a] hover:text-[#040404] transition cursor-pointer"
+                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-pewter hover:text-ink-black transition cursor-pointer"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? (
@@ -191,18 +191,20 @@ export default function LoginPage() {
       </div>
 
       {/* Discreet Security Footer */}
-      <div className="flex items-center justify-between px-2 text-[13px] text-[#6e797a]">
-        <span>Protected IT Workspace</span>
-
-        {/* 1997 Provisioning Trigger */}
-        <button
-          type="button"
-          onClick={() => setShowSecretModal(true)}
-          title="Administrative Provisioning"
-          className="link-sprout text-[13px] text-[#040404] cursor-pointer"
-        >
-          Admin Registration
-        </button>
+      <div className="flex items-center justify-between px-2 text-[13px] text-pewter">
+        <div className="flex items-center gap-1.5">
+          <span>Protected IT Workspace</span>
+          {/* Subtle disguised security icon */}
+          <button
+            type="button"
+            onClick={() => setShowSecretModal(true)}
+            aria-label="Security Access"
+            className="p-1 text-pewter/30 hover:text-pewter/80 rounded transition cursor-pointer"
+          >
+            <Lock className="h-3 w-3 opacity-30 hover:opacity-100 transition-opacity" />
+          </button>
+        </div>
+        <span className="text-[11px] text-pewter/50 font-medium">AdeManual v1.0</span>
       </div>
     </div>
   );

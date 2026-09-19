@@ -75,7 +75,7 @@ export default function ProcedureViewer({
   };
 
   return (
-    <div className="min-h-screen bg-[#ffffff] text-[#040404] font-sans flex flex-col justify-between pb-16 selection:bg-[#98e58e] selection:text-[#040404]">
+    <div className="min-h-screen bg-paper-white text-ink-black font-sans flex flex-col justify-between pb-16 selection:bg-sprout-green selection:text-ink-black">
       <DeleteConfirmModal
         isOpen={showDeleteModal}
         manualTitle={manual.title}
@@ -85,25 +85,25 @@ export default function ProcedureViewer({
 
       <div>
         {/* Top Navbar */}
-        <header className="sticky top-4 z-30 max-w-[1200px] mx-auto px-4 sm:px-6 my-3">
+        <header className="sticky top-4 z-30 max-w-300 mx-auto px-4 sm:px-6 my-3">
           <div className="nav-sprout h-16 px-5 flex items-center justify-between">
             <Link
               href="/dashboard"
-              className="text-sm font-bold text-[#040404] flex items-center gap-1.5 link-sprout"
+              className="text-sm font-bold text-ink-black flex items-center gap-1.5 link-sprout"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>Back to Library</span>
             </Link>
 
             {/* View Mode Switcher */}
-            <div className="flex items-center gap-1 bg-[#f4f4f4] p-1 rounded-[6px] border border-[#d9d9d9]">
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-md border border-ash-gray">
               <button
                 type="button"
                 onClick={() => setViewMode('all')}
-                className={`px-3 py-1 text-xs font-bold rounded-[6px] transition-all cursor-pointer ${
+                className={`px-3 py-1 text-xs font-bold rounded-md transition-all cursor-pointer ${
                   viewMode === 'all'
-                    ? 'bg-[#040404] text-[#ffffff]'
-                    : 'text-[#6e797a] hover:text-[#040404]'
+                    ? 'bg-ink-black text-paper-white'
+                    : 'text-pewter hover:text-ink-black'
                 }`}
               >
                 Full Playbook
@@ -111,10 +111,10 @@ export default function ProcedureViewer({
               <button
                 type="button"
                 onClick={() => setViewMode('walkthrough')}
-                className={`px-3 py-1 text-xs font-bold rounded-[6px] transition-all cursor-pointer ${
+                className={`px-3 py-1 text-xs font-bold rounded-md transition-all cursor-pointer ${
                   viewMode === 'walkthrough'
-                    ? 'bg-[#040404] text-[#ffffff]'
-                    : 'text-[#6e797a] hover:text-[#040404]'
+                    ? 'bg-ink-black text-paper-white'
+                    : 'text-pewter hover:text-ink-black'
                 }`}
               >
                 Step Execution
@@ -125,7 +125,7 @@ export default function ProcedureViewer({
               <button
                 type="button"
                 onClick={() => setShowDeleteModal(true)}
-                className="p-2 text-[#6e797a] hover:text-red-600 hover:bg-red-50 rounded-[6px] transition cursor-pointer border border-transparent hover:border-red-200"
+                className="p-2 text-pewter hover:text-red-600 hover:bg-red-50 rounded-md transition cursor-pointer border border-transparent hover:border-red-200"
                 title="Delete Manual"
               >
                 <Trash2 className="h-4 w-4" />
@@ -144,26 +144,26 @@ export default function ProcedureViewer({
 
         {/* Liquid Step Progress Bar (in Walkthrough mode) */}
         {viewMode === 'walkthrough' && (
-          <div className="w-full bg-[#d9d9d9] h-1.5 overflow-hidden">
+          <div className="w-full bg-ash-gray h-1.5 overflow-hidden">
             <div
-              className="h-full bg-[#98e58e] transition-all duration-300 ease-out"
+              className="h-full bg-sprout-green transition-all duration-300 ease-out"
               style={{ width: `${isCompleted ? 100 : progressPercentage}%` }}
             />
           </div>
         )}
 
         {/* Main Content Area */}
-        <main className="max-w-[960px] mx-auto px-4 sm:px-6 py-8 space-y-8">
+        <main className="max-w-240 mx-auto px-4 sm:px-6 py-8 space-y-8">
           {/* Header */}
-          <div className="space-y-2 border-b border-[#d9d9d9] pb-6">
+          <div className="space-y-2 border-b border-ash-gray pb-6">
             <div className="badge-sprout-green">
               <Terminal className="h-3.5 w-3.5" />
               <span>Standard Operating Procedure</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-[#040404] tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-ink-black tracking-tight">
               {manual.title}
             </h1>
-            <p className="text-sm text-[#6e797a]">
+            <p className="text-sm text-pewter">
               Documented by {authorName} • {steps.length}{' '}
               {steps.length === 1 ? 'Step' : 'Steps'}
             </p>
@@ -176,7 +176,7 @@ export default function ProcedureViewer({
             <div className="space-y-6">
               {steps.length === 0 ? (
                 <div className="card-sprout p-10 text-center space-y-3">
-                  <p className="text-[#6e797a] text-sm">No steps added to this manual yet.</p>
+                  <p className="text-pewter text-sm">No steps added to this manual yet.</p>
                   <Link
                     href={`/manuals/${manual.id}/edit`}
                     className="btn-sprout-primary"
@@ -188,21 +188,21 @@ export default function ProcedureViewer({
                 steps.map((step, idx) => (
                   <div
                     key={step.id || idx}
-                    className="card-sprout p-6 sm:p-8 space-y-5 transition-colors hover:border-[#040404]"
+                    className="card-sprout p-6 sm:p-8 space-y-5 transition-colors hover:border-ink-black"
                   >
                     {/* Step Title Header */}
                     <div className="flex items-start sm:items-center gap-3">
-                      <div className="px-3.5 py-1.5 rounded-[6px] bg-[#040404] text-[#ffffff] font-extrabold text-xs tracking-wider uppercase shrink-0">
+                      <div className="px-3.5 py-1.5 rounded-md bg-ink-black text-paper-white font-extrabold text-xs tracking-wider uppercase shrink-0">
                         Step {step.step_order || idx + 1}
                       </div>
-                      <h2 className="text-xl sm:text-2xl font-extrabold text-[#040404] leading-snug">
+                      <h2 className="text-xl sm:text-2xl font-extrabold text-ink-black leading-snug">
                         {step.title || `Step ${idx + 1}`}
                       </h2>
                     </div>
 
                     {/* Step Description */}
                     {step.description && (
-                      <p className="text-base text-[#040404] leading-relaxed whitespace-pre-wrap">
+                      <p className="text-base text-ink-black leading-relaxed whitespace-pre-wrap">
                         {step.description}
                       </p>
                     )}
@@ -211,23 +211,23 @@ export default function ProcedureViewer({
                     {step.media_url && (
                       <div className="pt-2">
                         {step.media_type === 'video' || step.media_url.endsWith('.mp4') ? (
-                          <div className="rounded-[16px] overflow-hidden bg-black border border-[#d9d9d9] max-w-2xl">
+                          <div className="rounded-2xl overflow-hidden bg-black border border-ash-gray max-w-2xl">
                             <video
                               controls
                               playsInline
                               preload="metadata"
                               src={step.media_url}
-                              className="w-full max-h-[460px] object-contain rounded-[16px]"
+                              className="w-full max-h-115 object-contain rounded-2xl"
                             />
                           </div>
                         ) : (
-                          <div className="rounded-[16px] overflow-hidden bg-[#ffffff] border border-[#d9d9d9] max-w-2xl">
+                          <div className="rounded-2xl overflow-hidden bg-paper-white border border-ash-gray max-w-2xl">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={step.media_url}
                               alt={step.title}
                               loading="lazy"
-                              className="w-full max-h-[460px] object-contain rounded-[16px]"
+                              className="w-full max-h-115 object-contain rounded-2xl"
                             />
                           </div>
                         )}
@@ -247,17 +247,17 @@ export default function ProcedureViewer({
               {isCompleted ? (
                 /* Completed Card */
                 <div className="card-sprout p-8 sm:p-12 text-center space-y-6">
-                  <div className="w-16 h-16 rounded-full bg-[#98e58e] text-[#040404] mx-auto flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-full bg-sprout-green text-ink-black mx-auto flex items-center justify-center">
                     <CheckCircle2 className="h-8 w-8" />
                   </div>
                   <div className="space-y-2">
                     <div className="badge-sprout-green">
                       <span>Execution Verified</span>
                     </div>
-                    <h2 className="text-2xl sm:text-3xl font-extrabold text-[#040404]">
+                    <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-black">
                       Procedure Successfully Completed
                     </h2>
-                    <p className="text-sm text-[#6e797a] max-w-md mx-auto leading-relaxed">
+                    <p className="text-sm text-pewter max-w-md mx-auto leading-relaxed">
                       You have executed and verified all {steps.length} steps for &quot;{manual.title}&quot;.
                     </p>
                   </div>
@@ -288,17 +288,17 @@ export default function ProcedureViewer({
                   <div className="card-sprout p-6 sm:p-9 space-y-6">
                     {/* Header */}
                     <div className="flex items-start sm:items-center gap-3">
-                      <div className="px-3.5 py-1.5 rounded-[6px] bg-[#040404] text-[#ffffff] font-extrabold text-xs tracking-wider uppercase shrink-0">
+                      <div className="px-3.5 py-1.5 rounded-md bg-ink-black text-paper-white font-extrabold text-xs tracking-wider uppercase shrink-0">
                         Step {currentStepIndex + 1} of {steps.length}
                       </div>
-                      <h2 className="text-xl sm:text-2xl font-extrabold text-[#040404] leading-snug">
+                      <h2 className="text-xl sm:text-2xl font-extrabold text-ink-black leading-snug">
                         {currentStep.title || `Step ${currentStepIndex + 1}`}
                       </h2>
                     </div>
 
                     {/* Description */}
                     {currentStep.description && (
-                      <p className="text-base text-[#040404] leading-relaxed whitespace-pre-wrap">
+                      <p className="text-base text-ink-black leading-relaxed whitespace-pre-wrap">
                         {currentStep.description}
                       </p>
                     )}
@@ -307,21 +307,21 @@ export default function ProcedureViewer({
                     {currentStep.media_url && (
                       <div className="pt-2">
                         {currentStep.media_type === 'video' || currentStep.media_url.endsWith('.mp4') ? (
-                          <div className="rounded-[16px] overflow-hidden bg-black border border-[#d9d9d9] max-w-2xl">
+                          <div className="rounded-2xl overflow-hidden bg-black border border-ash-gray max-w-2xl">
                             <video
                               controls
                               playsInline
                               src={currentStep.media_url}
-                              className="w-full max-h-[460px] object-contain rounded-[16px]"
+                              className="w-full max-h-115 object-contain rounded-2xl"
                             />
                           </div>
                         ) : (
-                          <div className="rounded-[16px] overflow-hidden bg-[#ffffff] border border-[#d9d9d9] max-w-2xl">
+                          <div className="rounded-2xl overflow-hidden bg-paper-white border border-ash-gray max-w-2xl">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={currentStep.media_url}
                               alt={currentStep.title}
-                              className="w-full max-h-[460px] object-contain rounded-[16px]"
+                              className="w-full max-h-115 object-contain rounded-2xl"
                             />
                           </div>
                         )}
@@ -330,18 +330,18 @@ export default function ProcedureViewer({
 
                     {/* Step Dots */}
                     {steps.length > 1 && (
-                      <div className="flex items-center justify-center gap-2 pt-2 border-t border-[#d9d9d9]">
+                      <div className="flex items-center justify-center gap-2 pt-2 border-t border-ash-gray">
                         {steps.map((_, dotIdx) => (
                           <button
                             key={dotIdx}
                             type="button"
                             onClick={() => setCurrentStepIndex(dotIdx)}
-                            className={`h-2 rounded-[6px] transition-all cursor-pointer ${
+                            className={`h-2 rounded-md transition-all cursor-pointer ${
                               dotIdx === currentStepIndex
-                                ? 'w-8 bg-[#040404]'
+                                ? 'w-8 bg-ink-black'
                                 : dotIdx < currentStepIndex
-                                ? 'w-2 bg-[#98e58e]'
-                                : 'w-2 bg-[#d9d9d9] hover:bg-[#6e797a]'
+                                ? 'w-2 bg-sprout-green'
+                                : 'w-2 bg-ash-gray hover:bg-pewter'
                             }`}
                             title={`Jump to Step ${dotIdx + 1}`}
                           />
@@ -381,7 +381,7 @@ export default function ProcedureViewer({
       </div>
 
       {/* Footer */}
-      <footer className="max-w-[1200px] w-full mx-auto px-4 sm:px-6 pt-8 text-center text-xs text-[#6e797a] border-t border-[#d9d9d9]">
+      <footer className="max-w-300 w-full mx-auto px-4 sm:px-6 pt-8 text-center text-xs text-pewter border-t border-ash-gray">
         Step {currentStepIndex + 1} of {steps.length} • AdeManual IT Operating Procedures
       </footer>
     </div>

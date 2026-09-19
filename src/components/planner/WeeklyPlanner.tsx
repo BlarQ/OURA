@@ -357,9 +357,9 @@ export default function WeeklyPlanner({ manuals }: WeeklyPlannerProps) {
 
       {/* Animated Toast Notification */}
       {toastMessage && (
-        <div className="p-3 sm:p-3.5 rounded-[8px] bg-[#98e58e]/25 border border-[#98e58e] flex items-center justify-between gap-3 text-xs font-bold text-[#040404] animate-modal-in shadow-md">
+        <div className="p-3 sm:p-3.5 rounded-lg bg-sprout-green/25 border border-sprout-green flex items-center justify-between gap-3 text-xs font-bold text-ink-black animate-modal-in shadow-md">
           <div className="flex items-center gap-2 min-w-0">
-            <CheckCircle2 className="h-4 w-4 text-[#040404] shrink-0" />
+            <CheckCircle2 className="h-4 w-4 text-ink-black shrink-0" />
             <span className="truncate">{toastMessage.text}</span>
           </div>
 
@@ -382,7 +382,7 @@ export default function WeeklyPlanner({ manuals }: WeeklyPlannerProps) {
             <button
               type="button"
               onClick={() => setToastMessage(null)}
-              className="p-1 text-[#040404] hover:opacity-75 cursor-pointer active:scale-90 transition-transform"
+              className="p-1 text-ink-black hover:opacity-75 cursor-pointer active:scale-90 transition-transform"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -394,11 +394,11 @@ export default function WeeklyPlanner({ manuals }: WeeklyPlannerProps) {
       <div className="card-sprout p-3 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-2.5 sm:gap-4">
         {/* Navigation Controls */}
         <div className="flex items-center justify-between sm:justify-start gap-2">
-          <div className="flex items-center gap-0.5 sm:gap-1 bg-[#f4f4f4] p-0.5 sm:p-1 rounded-[8px] border border-[#d9d9d9] shrink-0">
+          <div className="flex items-center gap-0.5 sm:gap-1 bg-slate-100 p-0.5 sm:p-1 rounded-lg border border-ash-gray shrink-0">
             <button
               type="button"
               onClick={() => setWeekOffset((prev) => prev - 1)}
-              className="p-1 sm:p-1.5 text-[#6e797a] hover:text-[#040404] hover:bg-white rounded-[6px] transition cursor-pointer active:scale-90"
+              className="p-1 sm:p-1.5 text-pewter hover:text-ink-black hover:bg-white rounded-md transition cursor-pointer active:scale-90"
               title="Previous Week"
             >
               <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -406,10 +406,10 @@ export default function WeeklyPlanner({ manuals }: WeeklyPlannerProps) {
             <button
               type="button"
               onClick={() => setWeekOffset(0)}
-              className={`px-2 sm:px-3 py-1 text-[11px] sm:text-xs font-bold rounded-[6px] transition-all cursor-pointer active:scale-95 ${
+              className={`px-2 sm:px-3 py-1 text-[11px] sm:text-xs font-bold rounded-md transition-all cursor-pointer active:scale-95 ${
                 weekOffset === 0
-                  ? 'bg-[#040404] text-white shadow-xs'
-                  : 'text-[#6e797a] hover:text-[#040404] hover:bg-white'
+                  ? 'bg-ink-black text-white shadow-xs'
+                  : 'text-pewter hover:text-ink-black hover:bg-white'
               }`}
             >
               This Week
@@ -417,7 +417,7 @@ export default function WeeklyPlanner({ manuals }: WeeklyPlannerProps) {
             <button
               type="button"
               onClick={() => setWeekOffset((prev) => prev + 1)}
-              className="p-1 sm:p-1.5 text-[#6e797a] hover:text-[#040404] hover:bg-white rounded-[6px] transition cursor-pointer active:scale-90"
+              className="p-1 sm:p-1.5 text-pewter hover:text-ink-black hover:bg-white rounded-md transition cursor-pointer active:scale-90"
               title="Next Week"
             >
               <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -425,27 +425,27 @@ export default function WeeklyPlanner({ manuals }: WeeklyPlannerProps) {
           </div>
 
           <div className="pl-1 sm:pl-2 min-w-0">
-            <span className="text-xs sm:text-base font-extrabold text-[#040404] block tracking-tight truncate">
+            <span className="text-xs sm:text-base font-extrabold text-ink-black block tracking-tight truncate">
               {weekRangeTitle}
             </span>
-            <span className="text-[10px] text-[#6e797a] font-bold block truncate">
+            <span className="text-[10px] text-pewter font-bold block truncate">
               Weekdays (Mon – Fri)
             </span>
           </div>
         </div>
 
         {/* Action Controls: Guaranteed to fit at once in a single row with ZERO horizontal scrolling */}
-        <div className="flex items-center justify-between sm:justify-end gap-1 sm:gap-2 w-full md:w-auto pt-1 sm:pt-0 border-t md:border-t-0 border-[#f0f0f0]">
+        <div className="flex items-center justify-between sm:justify-end gap-1 sm:gap-2 w-full md:w-auto pt-1 sm:pt-0 border-t md:border-t-0 border-slate-100">
           {/* Prominent Copy Week Activities Pop-up Trigger */}
           <button
             type="button"
             onClick={() => setIsCopyModalOpen(true)}
-            className="btn-sprout-ghost text-[11px] sm:text-xs py-1 sm:py-1.5 px-2 sm:px-3 flex items-center gap-1 border-[#040404] hover:bg-[#98e58e]/20 active:scale-95 transition-transform whitespace-nowrap shrink-0"
+            className="btn-sprout-ghost text-[11px] sm:text-xs py-1 sm:py-1.5 px-2 sm:px-3 flex items-center gap-1 border-ink-black hover:bg-sprout-green/20 active:scale-95 transition-transform whitespace-nowrap shrink-0"
             title="Copy and duplicate activities to another week"
           >
-            <Copy className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-[#040404] shrink-0" />
-            <span className="font-extrabold text-[#040404] sm:hidden">Copy</span>
-            <span className="font-extrabold text-[#040404] hidden sm:inline">Copy Activities</span>
+            <Copy className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-ink-black shrink-0" />
+            <span className="font-extrabold text-ink-black sm:hidden">Copy</span>
+            <span className="font-extrabold text-ink-black hidden sm:inline">Copy Activities</span>
           </button>
 
           {/* Export Schedule Dropdown */}
@@ -453,28 +453,28 @@ export default function WeeklyPlanner({ manuals }: WeeklyPlannerProps) {
             <button
               type="button"
               onClick={() => setIsExportOpen((prev) => !prev)}
-              className="btn-sprout-ghost text-[11px] sm:text-xs py-1 sm:py-1.5 px-1.5 sm:px-2.5 flex items-center gap-1 border-[#d9d9d9] hover:border-[#040404] active:scale-95 transition-transform cursor-pointer whitespace-nowrap shrink-0"
+              className="btn-sprout-ghost text-[11px] sm:text-xs py-1 sm:py-1.5 px-1.5 sm:px-2.5 flex items-center gap-1 border-ash-gray hover:border-ink-black active:scale-95 transition-transform cursor-pointer whitespace-nowrap shrink-0"
               title="Export weekly schedule to Word or Excel"
             >
-              <Download className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-[#040404] shrink-0" />
-              <span className="font-bold text-[#040404] hidden sm:inline">Export</span>
-              <ChevronDown className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-[#6e797a]" />
+              <Download className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-ink-black shrink-0" />
+              <span className="font-bold text-ink-black hidden sm:inline">Export</span>
+              <ChevronDown className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-pewter" />
             </button>
 
             {isExportOpen && (
-              <div className="absolute right-0 mt-1.5 w-52 bg-white border border-[#d9d9d9] rounded-[10px] shadow-xl z-40 p-1.5 space-y-1 animate-modal-in">
+              <div className="absolute right-0 mt-1.5 w-52 bg-white border border-ash-gray rounded-lg shadow-xl z-40 p-1.5 space-y-1 animate-modal-in">
                 <button
                   type="button"
                   onClick={() => {
                     setIsExportOpen(false);
                     exportScheduleToWord(weekRangeTitle, weekDays, activitiesByDate);
                   }}
-                  className="w-full text-left p-2 rounded-[6px] hover:bg-[#f4f4f4] transition cursor-pointer flex items-center gap-2 text-xs font-bold text-[#040404]"
+                  className="w-full text-left p-2 rounded-md hover:bg-slate-100 transition cursor-pointer flex items-center gap-2 text-xs font-bold text-ink-black"
                 >
                   <FileText className="h-4 w-4 text-blue-600" />
                   <div>
                     <span className="block">Export to Word (.doc)</span>
-                    <span className="text-[10px] text-[#6e797a] font-normal block">
+                    <span className="text-[10px] text-pewter font-normal block">
                       Full report with notes
                     </span>
                   </div>
@@ -486,12 +486,12 @@ export default function WeeklyPlanner({ manuals }: WeeklyPlannerProps) {
                     setIsExportOpen(false);
                     exportScheduleToExcel(weekRangeTitle, weekDays, activitiesByDate);
                   }}
-                  className="w-full text-left p-2 rounded-[6px] hover:bg-[#f4f4f4] transition cursor-pointer flex items-center gap-2 text-xs font-bold text-[#040404]"
+                  className="w-full text-left p-2 rounded-md hover:bg-slate-100 transition cursor-pointer flex items-center gap-2 text-xs font-bold text-ink-black"
                 >
                   <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
                   <div>
                     <span className="block">Export to Excel (.csv)</span>
-                    <span className="text-[10px] text-[#6e797a] font-normal block">
+                    <span className="text-[10px] text-pewter font-normal block">
                       Tabular spreadsheet
                     </span>
                   </div>
@@ -510,7 +510,7 @@ export default function WeeklyPlanner({ manuals }: WeeklyPlannerProps) {
             <span>{completedCount} Done</span>
           </span>
           {criticalCount > 0 && (
-            <span className="px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-[24px] bg-red-100 border border-red-300 text-red-700 text-[10px] sm:text-xs font-bold flex items-center gap-1 animate-pulse whitespace-nowrap shrink-0">
+            <span className="px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-3xl bg-red-100 border border-red-300 text-red-700 text-[10px] sm:text-xs font-bold flex items-center gap-1 animate-pulse whitespace-nowrap shrink-0">
               <AlertCircle className="h-3 w-3 text-red-600 shrink-0" />
               <span className="sm:hidden">{criticalCount} Crit</span>
               <span className="hidden sm:inline">{criticalCount} Critical</span>
@@ -525,7 +525,7 @@ export default function WeeklyPlanner({ manuals }: WeeklyPlannerProps) {
           ========================================================================= */}
       <div key={`mobile-week-${startDateStr}`} className="block md:hidden space-y-3.5 animate-tab-content">
         {/* Day Selector Pill Bar */}
-        <div className="flex items-center justify-between bg-[#f4f4f4] p-1 rounded-[12px] border border-[#d9d9d9]">
+        <div className="flex items-center justify-between bg-slate-100 p-1 rounded-xl border border-ash-gray">
           {weekDays.map((day, idx) => {
             const dayActs = activitiesByDate[day.dateStr] || [];
             const isSelected = selectedMobileDayIdx === idx;
@@ -537,10 +537,10 @@ export default function WeeklyPlanner({ manuals }: WeeklyPlannerProps) {
                   setSelectedMobileDayIdx(idx);
                   setMobileViewMode('single');
                 }}
-                className={`flex-1 py-1.5 px-0.5 rounded-[8px] text-center transition-all duration-200 cursor-pointer active:scale-95 ${
+                className={`flex-1 py-1.5 px-0.5 rounded-lg text-center transition-all duration-200 cursor-pointer active:scale-95 ${
                   isSelected
-                    ? 'bg-[#040404] text-white shadow-xs'
-                    : 'text-[#040404] hover:bg-white/60'
+                    ? 'bg-ink-black text-white shadow-xs'
+                    : 'text-ink-black hover:bg-white/60'
                 }`}
               >
                 <span className="text-[11px] sm:text-xs font-extrabold block">{day.shortDay}</span>
@@ -548,7 +548,7 @@ export default function WeeklyPlanner({ manuals }: WeeklyPlannerProps) {
                 {dayActs.length > 0 && (
                   <span
                     className={`inline-block w-1.5 h-1.5 rounded-full mt-0.5 ${
-                      isSelected ? 'bg-[#98e58e]' : 'bg-[#040404]'
+                      isSelected ? 'bg-sprout-green' : 'bg-ink-black'
                     }`}
                   />
                 )}
@@ -562,7 +562,7 @@ export default function WeeklyPlanner({ manuals }: WeeklyPlannerProps) {
           <button
             type="button"
             onClick={() => setIsCopyModalOpen(true)}
-            className="text-xs font-bold text-[#040404] flex items-center gap-1 link-sprout"
+            className="text-xs font-bold text-ink-black flex items-center gap-1 link-sprout"
           >
             <Copy className="h-3.5 w-3.5" />
             <span>Copy this week</span>
@@ -573,7 +573,7 @@ export default function WeeklyPlanner({ manuals }: WeeklyPlannerProps) {
             onClick={() =>
               setMobileViewMode((prev) => (prev === 'single' ? 'all' : 'single'))
             }
-            className="text-xs font-bold text-[#6e797a] hover:text-[#040404] link-sprout"
+            className="text-xs font-bold text-pewter hover:text-ink-black link-sprout"
           >
             {mobileViewMode === 'single'
               ? 'View all 5 weekdays'
@@ -591,10 +591,10 @@ export default function WeeklyPlanner({ manuals }: WeeklyPlannerProps) {
 
               return (
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between border-b border-[#d9d9d9] pb-2">
+                  <div className="flex items-center justify-between border-b border-ash-gray pb-2">
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="text-base font-extrabold text-[#040404]">
+                        <h3 className="text-base font-extrabold text-ink-black">
                           {day.dayName}
                         </h3>
                         {day.isToday && (
@@ -603,7 +603,7 @@ export default function WeeklyPlanner({ manuals }: WeeklyPlannerProps) {
                           </span>
                         )}
                       </div>
-                      <span className="text-[11px] text-[#6e797a] font-bold">
+                      <span className="text-[11px] text-pewter font-bold">
                         {day.formattedDate} • {dayActs.length}{' '}
                         {dayActs.length === 1 ? 'Task' : 'Tasks'}
                       </span>
@@ -621,12 +621,12 @@ export default function WeeklyPlanner({ manuals }: WeeklyPlannerProps) {
 
                   {/* Activity List */}
                   {dayActs.length === 0 ? (
-                    <div className="p-6 text-center text-xs text-[#6e797a] space-y-1.5">
+                    <div className="p-6 text-center text-xs text-pewter space-y-1.5">
                       <p>No operations planned for {day.dayName}.</p>
                       <button
                         type="button"
                         onClick={() => handleOpenAddModal(day)}
-                        className="link-sprout text-[#040404] text-xs font-bold"
+                        className="link-sprout text-ink-black text-xs font-bold"
                       >
                         + Plan first activity
                       </button>
@@ -635,15 +635,15 @@ export default function WeeklyPlanner({ manuals }: WeeklyPlannerProps) {
                     <div className="space-y-2">
                       {dayActs.map((act, idx) => (
                         <ActivityCard
-                          key={act.id}
-                          activity={act}
-                          animDelay={idx * 0.04}
-                          onOpenDetails={() => handleOpenTaskDetails(day, act)}
-                          onToggleComplete={() => handleToggleComplete(act)}
-                          onEdit={() => handleOpenEditModal(day, act)}
-                          onDuplicate={() => setDuplicatingActivity(act)}
-                          onDelete={() => handleDeleteActivity(act.id)}
-                        />
+                           key={act.id}
+                           activity={act}
+                           animDelay={idx * 0.04}
+                           onOpenDetails={() => handleOpenTaskDetails(day, act)}
+                           onToggleComplete={() => handleToggleComplete(act)}
+                           onEdit={() => handleOpenEditModal(day, act)}
+                           onDuplicate={() => setDuplicatingActivity(act)}
+                           onDelete={() => handleDeleteActivity(act.id)}
+                         />
                       ))}
                     </div>
                   )}
@@ -660,12 +660,12 @@ export default function WeeklyPlanner({ manuals }: WeeklyPlannerProps) {
               const dayActs = activitiesByDate[day.dateStr] || [];
               return (
                 <div key={day.dateStr} className="card-sprout p-3.5 sm:p-4 space-y-2.5">
-                  <div className="flex items-center justify-between border-b border-[#d9d9d9] pb-2">
+                  <div className="flex items-center justify-between border-b border-ash-gray pb-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-extrabold text-[#040404]">
+                      <span className="text-sm font-extrabold text-ink-black">
                         {day.dayName}
                       </span>
-                      <span className="text-[11px] text-[#6e797a] font-bold">
+                      <span className="text-[11px] text-pewter font-bold">
                         ({day.formattedDate})
                       </span>
                       {day.isToday && (
@@ -678,14 +678,14 @@ export default function WeeklyPlanner({ manuals }: WeeklyPlannerProps) {
                     <button
                       type="button"
                       onClick={() => handleOpenAddModal(day)}
-                      className="text-xs font-bold text-[#040404] hover:text-[#040404] p-1 rounded-[6px] hover:bg-[#f4f4f4] border border-[#d9d9d9] active:scale-90"
+                      className="text-xs font-bold text-ink-black hover:text-ink-black p-1 rounded-md hover:bg-slate-100 border border-ash-gray active:scale-90"
                     >
                       <Plus className="h-3.5 w-3.5" />
                     </button>
                   </div>
 
                   {dayActs.length === 0 ? (
-                    <p className="text-xs text-[#6e797a] py-1">No activities scheduled.</p>
+                    <p className="text-xs text-pewter py-1">No activities scheduled.</p>
                   ) : (
                     <div className="space-y-1.5">
                       {dayActs.map((act, idx) => (
@@ -723,17 +723,17 @@ export default function WeeklyPlanner({ manuals }: WeeklyPlannerProps) {
             <div
               key={day.dateStr}
               style={{ animationDelay: `${colIdx * 0.05}s` }}
-              className={`card-sprout p-3 sm:p-3.5 flex flex-col justify-between min-h-[440px] transition-all duration-200 hover:shadow-sm ${
+              className={`card-sprout p-3 sm:p-3.5 flex flex-col justify-between min-h-110 transition-all duration-200 hover:shadow-sm ${
                 day.isToday
-                  ? 'border-[#040404] bg-[#ffffff] ring-1 ring-[#040404]'
-                  : 'bg-[#ffffff] hover:border-[#cbcece]'
+                  ? 'border-ink-black bg-paper-white ring-1 ring-ink-black'
+                  : 'bg-paper-white hover:border-smoke-gray'
               }`}
             >
               <div className="space-y-2.5 flex-1 min-w-0">
                 {/* Day Header Column */}
-                <div className="border-b border-[#d9d9d9] pb-2 space-y-1">
+                <div className="border-b border-ash-gray pb-2 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-extrabold text-[#040404] uppercase tracking-wider">
+                    <span className="text-xs font-extrabold text-ink-black uppercase tracking-wider">
                       {day.shortDay}
                     </span>
                     {day.isToday ? (
@@ -741,13 +741,13 @@ export default function WeeklyPlanner({ manuals }: WeeklyPlannerProps) {
                         TODAY
                       </span>
                     ) : (
-                      <span className="text-[11px] font-bold text-[#6e797a]">
+                      <span className="text-[11px] font-bold text-pewter">
                         {day.formattedDate}
                       </span>
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] text-[#6e797a] font-bold">
+                  <div className="flex items-center justify-between text-[11px] text-pewter font-bold">
                     <span>{day.dayName}</span>
                     <span>
                       {dayActs.length} {dayActs.length === 1 ? 'task' : 'tasks'}
@@ -758,7 +758,7 @@ export default function WeeklyPlanner({ manuals }: WeeklyPlannerProps) {
                 {/* Day Activities List */}
                 <div className="space-y-2">
                   {dayActs.length === 0 ? (
-                    <div className="py-7 text-center text-xs text-[#6e797a]">
+                    <div className="py-7 text-center text-xs text-pewter">
                       <span>No activities</span>
                     </div>
                   ) : (
@@ -779,11 +779,11 @@ export default function WeeklyPlanner({ manuals }: WeeklyPlannerProps) {
               </div>
 
               {/* Bottom "+ Add Activity" Action */}
-              <div className="pt-2 mt-2 border-t border-[#d9d9d9]">
+              <div className="pt-2 mt-2 border-t border-ash-gray">
                 <button
                   type="button"
                   onClick={() => handleOpenAddModal(day)}
-                  className="w-full py-1.5 px-2 text-xs font-bold text-[#040404] bg-[#ffffff] hover:bg-[#f4f4f4] border border-dashed border-[#cbcece] hover:border-[#040404] rounded-[6px] transition-all flex items-center justify-center gap-1 cursor-pointer active:scale-95"
+                  className="w-full py-1.5 px-2 text-xs font-bold text-ink-black bg-paper-white hover:bg-slate-100 border border-dashed border-smoke-gray hover:border-ink-black rounded-md transition-all flex items-center justify-center gap-1 cursor-pointer active:scale-95"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   <span>Add Activity</span>
@@ -825,12 +825,12 @@ function ActivityCard({
   return (
     <div
       style={{ animationDelay: `${animDelay}s` }}
-      className={`p-2.5 rounded-[8px] border transition-all duration-200 text-left space-y-1.5 hover:-translate-y-0.5 hover:shadow-xs animate-tab-content cursor-pointer group ${
+      className={`p-2.5 rounded-lg border transition-all duration-200 text-left space-y-1.5 hover:-translate-y-0.5 hover:shadow-xs animate-tab-content cursor-pointer group ${
         activity.is_completed
-          ? 'bg-[#f8fafc] border-[#d9d9d9] opacity-80'
+          ? 'bg-slate-50 border-ash-gray opacity-80'
           : isCritical
           ? 'bg-red-50/40 border-red-200 hover:border-red-400'
-          : 'bg-[#ffffff] border-[#d9d9d9] hover:border-[#040404]'
+          : 'bg-paper-white border-ash-gray hover:border-ink-black'
       }`}
       onClick={onOpenDetails}
     >
@@ -842,27 +842,27 @@ function ActivityCard({
             e.stopPropagation();
             onToggleComplete();
           }}
-          className="p-0.5 text-[#040404] hover:opacity-75 transition-transform active:scale-125 cursor-pointer mt-0.5 shrink-0"
+          className="p-0.5 text-ink-black hover:opacity-75 transition-transform active:scale-125 cursor-pointer mt-0.5 shrink-0"
           title={activity.is_completed ? 'Mark pending' : 'Mark completed'}
         >
           {activity.is_completed ? (
-            <CheckCircle2 className="h-4 w-4 text-[#040404] fill-[#98e58e]" />
+            <CheckCircle2 className="h-4 w-4 text-ink-black fill-sprout-green" />
           ) : (
-            <Circle className="h-4 w-4 text-[#6e797a] hover:text-[#040404]" />
+            <Circle className="h-4 w-4 text-pewter hover:text-ink-black" />
           )}
         </button>
 
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-1">
             {activity.time_slot && (
-              <span className="inline-flex items-center gap-1 text-[9px] font-bold text-[#6e797a] bg-[#f4f4f4] px-1.5 py-0.5 rounded-[4px] border border-[#d9d9d9]">
+              <span className="inline-flex items-center gap-1 text-[9px] font-bold text-pewter bg-slate-100 px-1.5 py-0.5 rounded-sm border border-ash-gray">
                 <Clock className="h-2.5 w-2.5" />
                 <span className="truncate">{activity.time_slot}</span>
               </span>
             )}
 
             {isCritical && (
-              <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-[4px] bg-red-100 text-red-700 border border-red-200 animate-pulse">
+              <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-sm bg-red-100 text-red-700 border border-red-200 animate-pulse">
                 Critical
               </span>
             )}
@@ -877,7 +877,7 @@ function ActivityCard({
           <button
             type="button"
             onClick={onDuplicate}
-            className="p-1 text-[#6e797a] hover:text-[#040404] rounded-[4px] hover:bg-[#f4f4f4] transition cursor-pointer active:scale-90"
+            className="p-1 text-pewter hover:text-ink-black rounded-sm hover:bg-slate-100 transition cursor-pointer active:scale-90"
             title="Duplicate activity"
           >
             <Copy className="h-3 w-3" />
@@ -885,7 +885,7 @@ function ActivityCard({
           <button
             type="button"
             onClick={onEdit}
-            className="p-1 text-[#6e797a] hover:text-[#040404] rounded-[4px] hover:bg-[#f4f4f4] transition cursor-pointer active:scale-90"
+            className="p-1 text-pewter hover:text-ink-black rounded-sm hover:bg-slate-100 transition cursor-pointer active:scale-90"
             title="Edit activity"
           >
             <Edit2 className="h-3 w-3" />
@@ -893,7 +893,7 @@ function ActivityCard({
           <button
             type="button"
             onClick={onDelete}
-            className="p-1 text-[#6e797a] hover:text-red-600 rounded-[4px] hover:bg-red-50 transition cursor-pointer active:scale-90"
+            className="p-1 text-pewter hover:text-red-600 rounded-sm hover:bg-red-50 transition cursor-pointer active:scale-90"
             title="Delete activity"
           >
             <Trash2 className="h-3 w-3" />
@@ -903,8 +903,8 @@ function ActivityCard({
 
       {/* Activity Title */}
       <h4
-        className={`text-xs font-bold leading-snug break-words transition-all duration-200 group-hover:text-[#040404] ${
-          activity.is_completed ? 'line-through text-[#6e797a]' : 'text-[#040404]'
+        className={`text-xs font-bold leading-snug wrap-break-word transition-all duration-200 group-hover:text-ink-black ${
+          activity.is_completed ? 'line-through text-pewter' : 'text-ink-black'
         }`}
       >
         {activity.title}
@@ -912,7 +912,7 @@ function ActivityCard({
 
       {/* Execution Log Snippet / Notes Indicator */}
       {hasNotes && (
-        <div className="p-1.5 rounded-[4px] bg-[#f0fdf4] border border-[#bbf7d0] text-[10px] text-[#166534] flex items-start gap-1">
+        <div className="p-1.5 rounded-sm bg-[#f0fdf4] border border-[#bbf7d0] text-[10px] text-[#166534] flex items-start gap-1">
           <FileCheck className="h-3 w-3 text-[#16a34a] shrink-0 mt-0.5" />
           <span className="line-clamp-2 leading-tight font-medium italic">
             &quot;{activity.completion_notes}&quot;
@@ -922,7 +922,7 @@ function ActivityCard({
 
       {/* Description / Notes if any and no completion notes */}
       {!hasNotes && activity.description && (
-        <p className="text-[10px] text-[#6e797a] line-clamp-2 leading-relaxed">
+        <p className="text-[10px] text-pewter line-clamp-2 leading-relaxed">
           {activity.description}
         </p>
       )}
@@ -932,7 +932,7 @@ function ActivityCard({
         <div className="pt-0.5" onClick={(e) => e.stopPropagation()}>
           <Link
             href={`/manuals/${activity.manual_id}`}
-            className="inline-flex items-center gap-1 text-[9px] font-extrabold text-[#040404] bg-[#98e58e]/30 hover:bg-[#98e58e] border border-[#98e58e] px-1.5 py-0.5 rounded-[4px] transition-all cursor-pointer truncate max-w-full hover:scale-102 active:scale-95"
+            className="inline-flex items-center gap-1 text-[9px] font-extrabold text-ink-black bg-sprout-green/30 hover:bg-sprout-green border border-sprout-green px-1.5 py-0.5 rounded-sm transition-all cursor-pointer truncate max-w-full hover:scale-102 active:scale-95"
             title="Open linked procedure manual"
           >
             <BookOpen className="h-2.5 w-2.5 shrink-0" />

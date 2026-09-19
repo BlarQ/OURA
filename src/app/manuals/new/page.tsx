@@ -53,46 +53,46 @@ export default function NewManualPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#ffffff] text-[#040404] font-sans flex flex-col justify-between selection:bg-[#98e58e] selection:text-[#040404]">
+    <div className="min-h-screen bg-paper-white text-ink-black font-sans flex flex-col justify-between selection:bg-sprout-green selection:text-ink-black">
       <div>
         {/* Top Navbar */}
-        <header className="sticky top-2 sm:top-4 z-30 max-w-[1200px] mx-auto px-3 sm:px-6 my-2 sm:my-3">
+        <header className="sticky top-2 sm:top-4 z-30 max-w-300 mx-auto px-3 sm:px-6 my-2 sm:my-3">
           <div className="nav-sprout h-14 sm:h-16 px-3.5 sm:px-5 flex items-center justify-between">
             <Link
               href="/dashboard"
-              className="text-xs sm:text-sm font-bold text-[#040404] flex items-center gap-1.5 link-sprout"
+              className="text-xs sm:text-sm font-bold text-ink-black flex items-center gap-1.5 link-sprout"
             >
               <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span>Back to Library</span>
             </Link>
 
-            <span className="text-[11px] sm:text-xs font-bold text-[#6e797a]">
+            <span className="text-[11px] sm:text-xs font-bold text-pewter">
               Create Playbook Shell
             </span>
           </div>
         </header>
 
         {/* Main Content */}
-        <main className="max-w-[760px] mx-auto px-3.5 sm:px-6 pt-6 sm:pt-10 pb-16 space-y-6 sm:space-y-8">
+        <main className="max-w-190 mx-auto px-3.5 sm:px-6 pt-6 sm:pt-10 pb-16 space-y-6 sm:space-y-8">
           {/* Header */}
           <div className="space-y-1.5 sm:space-y-2">
             <div className="badge-sprout-green text-[10px] sm:text-xs py-0.5 px-2.5 whitespace-nowrap inline-flex items-center gap-1.5">
-              <Terminal className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-[#040404]" />
+              <Terminal className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-ink-black" />
               <span>New Procedure Manual</span>
             </div>
 
             {/* Single line title on mobile and desktop */}
-            <h1 className="text-lg sm:text-2xl md:text-3xl font-extrabold text-[#040404] tracking-tight whitespace-nowrap">
+            <h1 className="text-lg sm:text-2xl md:text-3xl font-extrabold text-ink-black tracking-tight whitespace-nowrap">
               Create IT Procedure Playbook
             </h1>
 
-            <p className="text-xs sm:text-sm text-[#6e797a] leading-relaxed">
+            <p className="text-xs sm:text-sm text-pewter leading-relaxed">
               Define the title for your procedure manual. You will then structure sequential steps, commands, and media attachments.
             </p>
           </div>
 
           {errorMessage && (
-            <div className="p-3 sm:p-4 rounded-[6px] bg-red-50 border border-red-200 flex items-start gap-2.5 text-xs sm:text-sm text-red-700">
+            <div className="p-3 sm:p-4 rounded-md bg-red-50 border border-red-200 flex items-start gap-2.5 text-xs sm:text-sm text-red-700">
               <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 text-red-600 mt-0.5" />
               <span className="font-semibold">{errorMessage}</span>
             </div>
@@ -102,9 +102,9 @@ export default function NewManualPage() {
           <div className="card-sprout p-5 sm:p-7 space-y-5">
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
               <div className="space-y-1.5">
-                <label className="text-xs sm:text-[13px] font-extrabold uppercase tracking-wider text-[#040404] flex items-center justify-between">
+                <label className="text-xs sm:text-[13px] font-extrabold uppercase tracking-wider text-ink-black flex items-center justify-between">
                   <span>Manual Title</span>
-                  <span className="text-[#6e797a] font-normal lowercase text-[11px] sm:text-xs">Required</span>
+                  <span className="text-pewter font-normal lowercase text-[11px] sm:text-xs">Required</span>
                 </label>
                 <div className="relative">
                   <input
@@ -117,14 +117,14 @@ export default function NewManualPage() {
                       if (errorMessage) setErrorMessage(null);
                     }}
                     placeholder="e.g. Oracle DB Client Installation & TNS Setup"
-                    className="input-sprout w-full font-bold text-xs sm:text-sm text-[#040404] py-2 sm:py-2.5 px-3 sm:px-4"
+                    className="input-sprout w-full font-bold text-xs sm:text-sm text-ink-black py-2 sm:py-2.5 px-3 sm:px-4"
                   />
                 </div>
               </div>
 
               {/* Template Suggestions */}
               <div className="space-y-2 pt-0.5">
-                <span className="text-[11px] sm:text-xs font-bold text-[#6e797a]">
+                <span className="text-[11px] sm:text-xs font-bold text-pewter">
                   Standard IT Playbook Templates:
                 </span>
                 <div className="flex flex-wrap gap-1.5 sm:gap-2">
@@ -136,7 +136,7 @@ export default function NewManualPage() {
                         setTitle(sampleTitle);
                         if (errorMessage) setErrorMessage(null);
                       }}
-                      className="px-2.5 sm:px-3 py-1 rounded-[24px] bg-[#ffffff] hover:bg-[#f4f4f4] border border-[#d9d9d9] text-[10px] sm:text-xs text-[#040404] font-bold transition-all text-left cursor-pointer active:scale-95"
+                      className="px-2.5 sm:px-3 py-1 rounded-3xl bg-paper-white hover:bg-slate-100 border border-ash-gray text-[10px] sm:text-xs text-ink-black font-bold transition-all text-left cursor-pointer active:scale-95"
                     >
                       + {sampleTitle}
                     </button>
@@ -145,10 +145,10 @@ export default function NewManualPage() {
               </div>
 
               {/* Submit Buttons */}
-              <div className="pt-3 border-t border-[#d9d9d9] flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-3">
+              <div className="pt-3 border-t border-ash-gray flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-3">
                 <Link
                   href="/dashboard"
-                  className="text-xs sm:text-sm font-bold text-[#6e797a] hover:text-[#040404] link-sprout order-2 sm:order-1"
+                  className="text-xs sm:text-sm font-bold text-pewter hover:text-ink-black link-sprout order-2 sm:order-1"
                 >
                   Cancel
                 </Link>
@@ -177,7 +177,7 @@ export default function NewManualPage() {
       </div>
 
       {/* Footer */}
-      <footer className="max-w-[1200px] w-full mx-auto px-3 sm:px-6 py-6 sm:py-8 text-center text-xs text-[#6e797a] border-t border-[#d9d9d9]">
+      <footer className="max-w-300 w-full mx-auto px-3 sm:px-6 py-6 sm:py-8 text-center text-xs text-pewter border-t border-ash-gray">
         AdeManual IT Systems • Standard Operating Procedures
       </footer>
     </div>

@@ -100,7 +100,7 @@ export default function TaskDetailsModal({
 
   const modalContent = (
     <div
-      className="fixed inset-0 z-[99999] w-screen h-screen min-h-[100dvh] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto overscroll-contain animate-backdrop-in"
+      className="fixed inset-0 z-99999 w-screen h-screen min-h-dvh flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto overscroll-contain animate-backdrop-in"
       onClick={(e) => {
         if (e.target === e.currentTarget && !isSaving) {
           onClose();
@@ -110,14 +110,14 @@ export default function TaskDetailsModal({
       aria-modal="true"
     >
       <div
-        className="relative w-full max-w-lg my-auto bg-[#ffffff] border border-[#d9d9d9] rounded-[16px] p-5 sm:p-6 space-y-4 text-[#040404] max-h-[calc(100dvh-2rem)] overflow-y-auto custom-scrollbar animate-modal-in shadow-2xl"
+        className="relative w-full max-w-lg my-auto bg-paper-white border border-ash-gray rounded-2xl p-5 sm:p-6 space-y-4 text-ink-black max-h-[calc(100dvh-2rem)] overflow-y-auto custom-scrollbar animate-modal-in shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
           onClick={onClose}
           disabled={isSaving}
-          className="absolute top-3.5 right-3.5 p-1.5 text-[#6e797a] hover:text-[#040404] rounded-[6px] hover:bg-[#f4f4f4] transition cursor-pointer disabled:opacity-50"
+          className="absolute top-3.5 right-3.5 p-1.5 text-pewter hover:text-ink-black rounded-md hover:bg-slate-100 transition cursor-pointer disabled:opacity-50"
           aria-label="Close modal"
         >
           <X className="h-4 w-4" />
@@ -132,30 +132,30 @@ export default function TaskDetailsModal({
             </div>
 
             {activity.time_slot && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#6e797a] bg-[#f4f4f4] px-2 py-0.5 rounded-[24px] border border-[#d9d9d9]">
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-pewter bg-slate-100 px-2 py-0.5 rounded-3xl border border-ash-gray">
                 <Clock className="h-3 w-3" />
                 <span>{activity.time_slot}</span>
               </span>
             )}
 
             {isCritical ? (
-              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-[24px] bg-red-100 text-red-700 border border-red-200">
+              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-3xl bg-red-100 text-red-700 border border-red-200">
                 Critical Priority
               </span>
             ) : (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-[24px] bg-[#f4f4f4] text-[#6e797a] border border-[#d9d9d9] uppercase">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-3xl bg-slate-100 text-pewter border border-ash-gray uppercase">
                 {activity.priority}
               </span>
             )}
           </div>
 
-          <h2 className="text-xl sm:text-2xl font-extrabold text-[#040404] tracking-tight leading-snug pt-1">
+          <h2 className="text-xl sm:text-2xl font-extrabold text-ink-black tracking-tight leading-snug pt-1">
             {activity.title}
           </h2>
         </div>
 
         {error && (
-          <div className="p-2.5 rounded-[6px] bg-red-50 border border-red-200 text-xs font-bold text-red-700 flex items-center gap-2">
+          <div className="p-2.5 rounded-md bg-red-50 border border-red-200 text-xs font-bold text-red-700 flex items-center gap-2">
             <AlertCircle className="h-3.5 w-3.5 shrink-0" />
             <span>{error}</span>
           </div>
@@ -163,8 +163,8 @@ export default function TaskDetailsModal({
 
         {/* Planned Description (if provided) */}
         {activity.description && (
-          <div className="p-3 rounded-[8px] bg-[#f8fafc] border border-[#d9d9d9] text-xs text-[#040404] space-y-1">
-            <span className="text-[10px] font-extrabold uppercase text-[#6e797a] tracking-wider block">
+          <div className="p-3 rounded-lg bg-slate-50 border border-ash-gray text-xs text-ink-black space-y-1">
+            <span className="text-[10px] font-extrabold uppercase text-pewter tracking-wider block">
               Planned Scope & Target:
             </span>
             <p className="leading-relaxed whitespace-pre-wrap">{activity.description}</p>
@@ -173,14 +173,14 @@ export default function TaskDetailsModal({
 
         {/* Linked Procedure Playbook Shortcut */}
         {activity.manual_id && (
-          <div className="p-3 rounded-[8px] bg-[#98e58e]/20 border border-[#98e58e] flex items-center justify-between gap-3">
+          <div className="p-3 rounded-lg bg-sprout-green/20 border border-sprout-green flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 min-w-0">
-              <BookOpen className="h-4 w-4 text-[#040404] shrink-0" />
+              <BookOpen className="h-4 w-4 text-ink-black shrink-0" />
               <div className="min-w-0">
-                <span className="text-[10px] uppercase font-extrabold text-[#040404] tracking-wider block">
+                <span className="text-[10px] uppercase font-extrabold text-ink-black tracking-wider block">
                   Linked IT Procedure:
                 </span>
-                <span className="text-xs font-bold text-[#040404] truncate block">
+                <span className="text-xs font-bold text-ink-black truncate block">
                   {activity.manual_title || 'Procedure Playbook'}
                 </span>
               </div>
@@ -197,11 +197,11 @@ export default function TaskDetailsModal({
         )}
 
         {/* DAILY EXECUTION LOG & COMPLETION NOTES SECTION */}
-        <div className="p-3.5 sm:p-4 rounded-[12px] bg-[#f8fafc] border-2 border-[#040404] space-y-3">
+        <div className="p-3.5 sm:p-4 rounded-xl bg-slate-50 border-2 border-ink-black space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <FileCheck className="h-4 w-4 text-[#040404]" />
-              <span className="text-xs font-extrabold text-[#040404] uppercase tracking-wider">
+              <FileCheck className="h-4 w-4 text-ink-black" />
+              <span className="text-xs font-extrabold text-ink-black uppercase tracking-wider">
                 Daily Execution Log & Notes
               </span>
             </div>
@@ -210,27 +210,27 @@ export default function TaskDetailsModal({
             <button
               type="button"
               onClick={() => setIsCompleted((prev) => !prev)}
-              className={`text-[11px] font-extrabold px-2.5 py-1 rounded-[24px] border transition cursor-pointer flex items-center gap-1.5 active:scale-95 ${
+              className={`text-[11px] font-extrabold px-2.5 py-1 rounded-3xl border transition cursor-pointer flex items-center gap-1.5 active:scale-95 ${
                 isCompleted
-                  ? 'bg-[#98e58e] text-[#040404] border-[#98e58e]'
-                  : 'bg-[#ffffff] text-[#6e797a] border-[#d9d9d9] hover:border-[#040404]'
+                  ? 'bg-sprout-green text-ink-black border-sprout-green'
+                  : 'bg-paper-white text-pewter border-ash-gray hover:border-ink-black'
               }`}
             >
               {isCompleted ? (
                 <>
-                  <CheckCircle2 className="h-3.5 w-3.5 fill-[#040404] text-[#98e58e]" />
+                  <CheckCircle2 className="h-3.5 w-3.5 fill-ink-black text-sprout-green" />
                   <span>Completed</span>
                 </>
               ) : (
                 <>
-                  <Circle className="h-3.5 w-3.5 text-[#6e797a]" />
+                  <Circle className="h-3.5 w-3.5 text-pewter" />
                   <span>Mark Completed</span>
                 </>
               )}
             </button>
           </div>
 
-          <p className="text-[11px] text-[#6e797a]">
+          <p className="text-[11px] text-pewter">
             Document what you accomplished, results, errors encountered, and steps taken for end-of-day review.
           </p>
 
@@ -243,14 +243,14 @@ export default function TaskDetailsModal({
           />
 
           {activity.completed_at && (
-            <p className="text-[10px] text-[#6e797a] font-medium">
+            <p className="text-[10px] text-pewter font-medium">
               Completed on: {new Date(activity.completed_at).toLocaleString()}
             </p>
           )}
         </div>
 
         {/* Bottom Actions Bar */}
-        <div className="pt-2 border-t border-[#d9d9d9] flex flex-wrap items-center justify-between gap-2">
+        <div className="pt-2 border-t border-ash-gray flex flex-wrap items-center justify-between gap-2">
           {/* Secondary Actions: Edit, Duplicate, Delete */}
           <div className="flex items-center gap-1">
             <button
@@ -259,7 +259,7 @@ export default function TaskDetailsModal({
                 onClose();
                 onEdit(activity);
               }}
-              className="p-1.5 text-[#6e797a] hover:text-[#040404] hover:bg-[#f4f4f4] rounded-[6px] border border-[#d9d9d9] transition cursor-pointer active:scale-90 text-xs font-bold flex items-center gap-1"
+              className="p-1.5 text-pewter hover:text-ink-black hover:bg-slate-100 rounded-md border border-ash-gray transition cursor-pointer active:scale-90 text-xs font-bold flex items-center gap-1"
               title="Edit Activity"
             >
               <Edit2 className="h-3.5 w-3.5" />
@@ -272,7 +272,7 @@ export default function TaskDetailsModal({
                 onClose();
                 onDuplicate(activity);
               }}
-              className="p-1.5 text-[#6e797a] hover:text-[#040404] hover:bg-[#f4f4f4] rounded-[6px] border border-[#d9d9d9] transition cursor-pointer active:scale-90 text-xs font-bold flex items-center gap-1"
+              className="p-1.5 text-pewter hover:text-ink-black hover:bg-slate-100 rounded-md border border-ash-gray transition cursor-pointer active:scale-90 text-xs font-bold flex items-center gap-1"
               title="Duplicate Activity"
             >
               <Copy className="h-3.5 w-3.5" />
@@ -285,7 +285,7 @@ export default function TaskDetailsModal({
                 onClose();
                 onDelete(activity.id);
               }}
-              className="p-1.5 text-[#6e797a] hover:text-red-600 hover:bg-red-50 rounded-[6px] border border-[#d9d9d9] transition cursor-pointer active:scale-90 text-xs font-bold flex items-center gap-1"
+              className="p-1.5 text-pewter hover:text-red-600 hover:bg-red-50 rounded-md border border-ash-gray transition cursor-pointer active:scale-90 text-xs font-bold flex items-center gap-1"
               title="Delete Activity"
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -316,7 +316,7 @@ export default function TaskDetailsModal({
                   <span>Saving Log...</span>
                 </span>
               ) : saveSuccess ? (
-                <span className="flex items-center gap-1 text-[#040404]">
+                <span className="flex items-center gap-1 text-ink-black">
                   <CheckCircle2 className="h-3.5 w-3.5" />
                   <span>Saved!</span>
                 </span>

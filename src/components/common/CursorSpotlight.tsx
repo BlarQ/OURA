@@ -30,7 +30,7 @@ export default function CursorSpotlight() {
       {/* 3D Hardware-Accelerated Cursor Follower (Zero React Rerenders) */}
       <div
         ref={spotlightRef}
-        className="absolute w-[450px] h-[450px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-blue-500/10 via-indigo-500/8 to-cyan-400/8 blur-3xl opacity-0 transition-opacity duration-500 will-change-transform pointer-events-none"
+        className="absolute w-112.5 h-112.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-linear-to-r from-blue-500/10 via-indigo-500/8 to-cyan-400/8 blur-3xl opacity-0 transition-opacity duration-500 will-change-transform pointer-events-none"
         style={{ top: 0, left: 0 }}
       />
     </div>

@@ -46,7 +46,7 @@ export default function DeleteConfirmModal({
 
   const modalContent = (
     <div
-      className="fixed inset-0 z-[99999] w-screen h-screen min-h-[100dvh] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto overscroll-contain animate-backdrop-in"
+      className="fixed inset-0 z-99999 w-screen h-screen min-h-dvh flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto overscroll-contain animate-backdrop-in"
       onClick={(e) => {
         if (e.target === e.currentTarget && !isDeleting) {
           onClose();
@@ -56,14 +56,14 @@ export default function DeleteConfirmModal({
       aria-modal="true"
     >
       <div
-        className="relative w-full max-w-sm my-auto bg-[#ffffff] border border-[#d9d9d9] rounded-[16px] p-5 sm:p-6 space-y-4 text-[#040404] max-h-[calc(100dvh-2rem)] overflow-y-auto custom-scrollbar animate-modal-in shadow-2xl"
+        className="relative w-full max-w-sm my-auto bg-paper-white border border-ash-gray rounded-2xl p-5 sm:p-6 space-y-4 text-ink-black max-h-[calc(100dvh-2rem)] overflow-y-auto custom-scrollbar animate-modal-in shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
           onClick={onClose}
           disabled={isDeleting}
-          className="absolute top-3.5 right-3.5 p-1.5 text-[#6e797a] hover:text-[#040404] rounded-[6px] hover:bg-[#f4f4f4] transition cursor-pointer disabled:opacity-50"
+          className="absolute top-3.5 right-3.5 p-1.5 text-pewter hover:text-ink-black rounded-md hover:bg-slate-100 transition cursor-pointer disabled:opacity-50"
           aria-label="Close modal"
         >
           <X className="h-4 w-4" />
@@ -71,37 +71,37 @@ export default function DeleteConfirmModal({
 
         {/* Modal Header */}
         <div className="flex items-start gap-3 pr-6">
-          <div className="w-10 h-10 rounded-[6px] bg-red-100 border border-red-200 text-red-600 flex items-center justify-center shrink-0 mt-0.5">
+          <div className="w-10 h-10 rounded-md bg-red-100 border border-red-200 text-red-600 flex items-center justify-center shrink-0 mt-0.5">
             <Trash2 className="h-5 w-5" />
           </div>
           <div className="space-y-0.5">
-            <h3 className="text-lg font-extrabold text-[#040404] tracking-tight">
+            <h3 className="text-lg font-extrabold text-ink-black tracking-tight">
               Delete Procedure Manual?
             </h3>
-            <p className="text-[11px] text-[#6e797a]">
+            <p className="text-[11px] text-pewter">
               This action is permanent and cannot be reversed.
             </p>
           </div>
         </div>
 
         {/* Message */}
-        <div className="p-3 rounded-[6px] bg-[#f8fafc] border border-[#d9d9d9] text-xs text-[#040404] space-y-1.5">
+        <div className="p-3 rounded-md bg-slate-50 border border-ash-gray text-xs text-ink-black space-y-1.5">
           <p>
             Are you sure you want to delete <strong className="font-extrabold">&quot;{manualTitle}&quot;</strong>?
           </p>
-          <p className="text-[11px] text-[#6e797a]">
+          <p className="text-[11px] text-pewter">
             All associated steps, code syntax, and media will be removed from your database.
           </p>
         </div>
 
         {error && (
-          <div className="p-2.5 rounded-[6px] bg-red-50 border border-red-200 text-xs font-bold text-red-700">
+          <div className="p-2.5 rounded-md bg-red-50 border border-red-200 text-xs font-bold text-red-700">
             {error}
           </div>
         )}
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-end gap-2 pt-1 border-t border-[#d9d9d9]">
+        <div className="flex items-center justify-end gap-2 pt-1 border-t border-ash-gray">
           <button
             type="button"
             disabled={isDeleting}
@@ -115,7 +115,7 @@ export default function DeleteConfirmModal({
             type="button"
             disabled={isDeleting}
             onClick={handleDelete}
-            className="inline-flex items-center justify-center bg-red-600 hover:bg-red-700 active:scale-95 text-[#ffffff] font-bold rounded-[6px] px-3.5 py-1.5 text-xs transition-all cursor-pointer disabled:opacity-60"
+            className="inline-flex items-center justify-center bg-red-600 hover:bg-red-700 active:scale-95 text-paper-white font-bold rounded-md px-3.5 py-1.5 text-xs transition-all cursor-pointer disabled:opacity-60"
           >
             {isDeleting ? (
               <span className="flex items-center gap-1">
