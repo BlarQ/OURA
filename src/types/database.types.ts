@@ -86,6 +86,53 @@ export interface Database {
           }
         ];
       };
+      activities: {
+        Row: {
+          id: string;
+          user_id: string;
+          activity_date: string;
+          title: string;
+          description: string | null;
+          status: string | null;
+          notes: string | null;
+          tags: string[] | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string;
+          activity_date: string;
+          title: string;
+          description?: string | null;
+          status?: string | null;
+          notes?: string | null;
+          tags?: string[] | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          activity_date?: string;
+          title?: string;
+          description?: string | null;
+          status?: string | null;
+          notes?: string | null;
+          tags?: string[] | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'activities_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
       weekly_activities: {
         Row: {
           id: string;

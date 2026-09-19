@@ -13,7 +13,6 @@ import {
   Repeat,
 } from 'lucide-react';
 import type { WeeklyActivity } from '@/types/database.types';
-
 import { useModalScrollLock } from '@/lib/hooks/useModalScrollLock';
 
 interface DuplicateActivityModalProps {
@@ -34,6 +33,10 @@ export default function DuplicateActivityModal({
   onDuplicate,
 }: DuplicateActivityModalProps) {
   const [mounted, setMounted] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [resetCompleted, setResetCompleted] = useState<boolean>(true);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -41,6 +44,16 @@ export default function DuplicateActivityModal({
 
   // Lock HTML and Body scroll completely when modal is open
   useModalScrollLock(isOpen, onClose);
+
+  // Reset modal state every time it opens or target activity changes
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedDate('');
+      setResetCompleted(true);
+      setIsSubmitting(false);
+      setError(null);
+    }
+  }, [isOpen, activity]);
 
   // Quick target suggestions
   const suggestions = useMemo(() => {
@@ -82,11 +95,6 @@ export default function DuplicateActivityModal({
     ];
   }, [activity]);
 
-  const [selectedDate, setSelectedDate] = useState<string>('');
-  const [resetCompleted, setResetCompleted] = useState<boolean>(true);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-
   if (!isOpen || !activity || !mounted) return null;
 
   const handleCopy = async () => {
@@ -101,6 +109,8 @@ export default function DuplicateActivityModal({
 
     try {
       await onDuplicate(activity, target, resetCompleted);
+      setIsSubmitting(false);
+      setError(null);
       onClose();
     } catch (err: any) {
       console.error('Failed to duplicate activity:', err);
@@ -109,12 +119,19 @@ export default function DuplicateActivityModal({
     }
   };
 
+  const handleClose = () => {
+    if (isSubmitting) return;
+    setIsSubmitting(false);
+    setError(null);
+    onClose();
+  };
+
   const modalContent = (
     <div
       className="fixed inset-0 z-99999 w-screen h-screen min-h-dvh flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto overscroll-contain animate-backdrop-in"
       onClick={(e) => {
         if (e.target === e.currentTarget && !isSubmitting) {
-          onClose();
+          handleClose();
         }
       }}
       role="dialog"
@@ -126,7 +143,7 @@ export default function DuplicateActivityModal({
       >
         {/* Close Button */}
         <button
-          onClick={onClose}
+          onClick={handleClose}
           disabled={isSubmitting}
           className="absolute top-3.5 right-3.5 p-1.5 text-pewter hover:text-ink-black rounded-md hover:bg-slate-100 transition cursor-pointer disabled:opacity-50"
           aria-label="Close modal"
@@ -228,9 +245,9 @@ export default function DuplicateActivityModal({
         <div className="pt-2.5 border-t border-ash-gray flex items-center justify-end gap-2">
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             disabled={isSubmitting}
-            className="btn-sprout-ghost text-xs py-1.5 px-3"
+            className="btn-sprout-ghost text-xs py-1.5 px-3 cursor-pointer"
           >
             Cancel
           </button>

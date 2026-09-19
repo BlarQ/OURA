@@ -1,5 +1,5 @@
 import { createClient as createBrowserSupabase } from '@/lib/supabase/client';
-import type { WeeklyActivity, ActivityPriority } from '@/types/database.types';
+import type { WeeklyActivity, ActivityPriority, Database } from '@/types/database.types';
 
 export interface CreateActivityPayload {
   activity_date: string; // 'YYYY-MM-DD'
@@ -33,6 +33,88 @@ function saveLocalActivities(activities: WeeklyActivity[]) {
 }
 
 /**
+ * Helper to decode metadata stored in the legacy 'activities' table's notes column
+ */
+function parseLegacyNotes(notesStr?: string | null): {
+  time_slot?: string | null;
+  priority?: ActivityPriority;
+  manual_id?: string | null;
+  completion_notes?: string | null;
+  completed_at?: string | null;
+  actual_notes?: string | null;
+} {
+  if (!notesStr) return {};
+  try {
+    if (notesStr.startsWith('{') && notesStr.endsWith('}')) {
+      const parsed = JSON.parse(notesStr);
+      return {
+        time_slot: parsed.time_slot || null,
+        priority: parsed.priority || 'standard',
+        manual_id: parsed.manual_id || null,
+        completion_notes: parsed.completion_notes || parsed.notes || null,
+        completed_at: parsed.completed_at || null,
+        actual_notes: parsed.completion_notes || null,
+      };
+    }
+  } catch {}
+  return { completion_notes: notesStr, actual_notes: notesStr };
+}
+
+/**
+ * Helper to encode metadata into the legacy 'activities' table's notes column
+ */
+function encodeLegacyNotes(payload: {
+  time_slot?: string | null;
+  priority?: ActivityPriority;
+  manual_id?: string | null;
+  completion_notes?: string | null;
+  completed_at?: string | null;
+}): string {
+  return JSON.stringify({
+    time_slot: payload.time_slot || null,
+    priority: payload.priority || 'standard',
+    manual_id: payload.manual_id || null,
+    completion_notes: payload.completion_notes || null,
+    completed_at: payload.completed_at || null,
+  });
+}
+
+/**
+ * Sync un-synced local activities to Supabase once user is authenticated
+ */
+async function syncLocalToSupabase(userId: string) {
+  try {
+    const local = getLocalActivities();
+    const unsynced = local.filter(
+      (a) => a.id.startsWith('act_') || a.user_id === 'current_user'
+    );
+    if (unsynced.length === 0) return;
+
+    for (const item of unsynced) {
+      await createActivity({
+        activity_date: item.activity_date,
+        title: item.title,
+        description: item.description,
+        time_slot: item.time_slot,
+        manual_id: item.manual_id,
+        priority: item.priority,
+        is_completed: item.is_completed,
+        completion_notes: item.completion_notes,
+        completed_at: item.completed_at,
+      });
+    }
+
+    // Clear migrated local temporary items
+    const remaining = local.filter(
+      (a) => !a.id.startsWith('act_') && a.user_id !== 'current_user'
+    );
+    saveLocalActivities(remaining);
+  } catch (syncErr) {
+    console.warn('Sync local to Supabase notice:', syncErr);
+  }
+}
+
+/**
  * Fetch activities for a given date range (e.g. Monday to Friday)
  */
 export async function getWeeklyActivities(
@@ -51,7 +133,11 @@ export async function getWeeklyActivities(
       );
     }
 
-    const { data, error } = await supabase
+    // Try background sync of any previously saved local activities
+    syncLocalToSupabase(user.id);
+
+    // 1. Primary: Try querying 'weekly_activities' table
+    const { data: weeklyData, error: weeklyError } = await supabase
       .from('weekly_activities')
       .select('*, manuals(title)')
       .gte('activity_date', startDateStr)
@@ -59,45 +145,78 @@ export async function getWeeklyActivities(
       .order('activity_date', { ascending: true })
       .order('created_at', { ascending: true });
 
-    if (error || !data) {
-      // Fallback to local storage if table is not yet migrated in Supabase
-      const local = getLocalActivities().filter(
-        (a) => a.activity_date >= startDateStr && a.activity_date <= endDateStr
-      );
-      return local;
+    if (!weeklyError && weeklyData) {
+      const mapped = (weeklyData as any[]).map((item: any) => ({
+        id: item.id,
+        user_id: item.user_id,
+        manual_id: item.manual_id,
+        manual_title: item.manuals?.title || null,
+        activity_date: item.activity_date,
+        title: item.title,
+        description: item.description,
+        time_slot: item.time_slot,
+        priority: item.priority || 'standard',
+        is_completed: Boolean(item.is_completed),
+        completion_notes: item.completion_notes || null,
+        completed_at: item.completed_at || null,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+      }));
+      return mapped;
     }
 
-    const mapped = data.map((item: any) => ({
-      id: item.id,
-      user_id: item.user_id,
-      manual_id: item.manual_id,
-      manual_title: item.manuals?.title || null,
-      activity_date: item.activity_date,
-      title: item.title,
-      description: item.description,
-      time_slot: item.time_slot,
-      priority: item.priority || 'standard',
-      is_completed: Boolean(item.is_completed),
-      completion_notes: item.completion_notes || null,
-      completed_at: item.completed_at || null,
-      created_at: item.created_at,
-      updated_at: item.updated_at,
-    }));
+    // 2. Secondary: Fallback to Supabase 'activities' table if weekly_activities is not yet created
+    const { data: actData, error: actError } = await supabase
+      .from('activities')
+      .select('*')
+      .gte('activity_date', startDateStr)
+      .lte('activity_date', endDateStr)
+      .order('activity_date', { ascending: true })
+      .order('created_at', { ascending: true });
 
-    return mapped;
+    if (!actError && actData) {
+      const mapped = (actData as any[]).map((item: any) => {
+        const meta = parseLegacyNotes(item.notes);
+        return {
+          id: item.id,
+          user_id: item.user_id,
+          manual_id: meta.manual_id || null,
+          manual_title: null,
+          activity_date: item.activity_date,
+          title: item.title,
+          description: item.description,
+          time_slot: meta.time_slot || null,
+          priority: meta.priority || 'standard',
+          is_completed: item.status === 'completed' || Boolean(item.is_completed),
+          completion_notes: meta.completion_notes || null,
+          completed_at: meta.completed_at || null,
+          created_at: item.created_at,
+          updated_at: item.updated_at,
+        };
+      });
+      return mapped;
+    }
+
+    // 3. Fallback to local storage if network or DB connection is completely offline
+    return getLocalActivities().filter(
+      (a) => a.activity_date >= startDateStr && a.activity_date <= endDateStr
+    );
   } catch (err) {
-    console.warn('Using local fallback for weekly activities:', err);
+    console.warn('Falling back to local storage for weekly activities:', err);
     return getLocalActivities().filter(
       (a) => a.activity_date >= startDateStr && a.activity_date <= endDateStr
     );
   }
 }
 
+/**
+ * Create a new activity in Supabase with automatic dual-table support
+ */
 export async function createActivity(
   payload: CreateActivityPayload
 ): Promise<WeeklyActivity | null> {
   const localId = `act_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-  const newActivity: WeeklyActivity = {
+  const fallbackActivity: WeeklyActivity = {
     id: localId,
     user_id: 'current_user',
     manual_id: payload.manual_id || null,
@@ -123,8 +242,8 @@ export async function createActivity(
     } = await supabase.auth.getUser();
 
     if (user) {
-      newActivity.user_id = user.id;
-      const { data, error } = await supabase
+      // 1. Try 'weekly_activities' table first
+      const { data: weeklyData, error: weeklyError } = await supabase
         .from('weekly_activities')
         .insert({
           user_id: user.id,
@@ -143,42 +262,90 @@ export async function createActivity(
         .select('*, manuals(title)')
         .single();
 
-      if (!error && data) {
+      if (!weeklyError && weeklyData) {
+        const item = weeklyData as any;
         return {
-          id: data.id,
-          user_id: data.user_id,
-          manual_id: data.manual_id,
-          manual_title: (data as any).manuals?.title || null,
-          activity_date: data.activity_date,
-          title: data.title,
-          description: data.description,
-          time_slot: data.time_slot,
-          priority: data.priority,
-          is_completed: data.is_completed,
-          completion_notes: data.completion_notes || null,
-          completed_at: data.completed_at || null,
-          created_at: data.created_at,
-          updated_at: data.updated_at,
+          id: item.id,
+          user_id: item.user_id,
+          manual_id: item.manual_id,
+          manual_title: item.manuals?.title || null,
+          activity_date: item.activity_date,
+          title: item.title,
+          description: item.description,
+          time_slot: item.time_slot,
+          priority: item.priority,
+          is_completed: item.is_completed,
+          completion_notes: item.completion_notes || null,
+          completed_at: item.completed_at || null,
+          created_at: item.created_at,
+          updated_at: item.updated_at,
+        };
+      }
+
+      // 2. Fallback: Save to 'activities' table in Supabase
+      const legacyNotes = encodeLegacyNotes({
+        time_slot: payload.time_slot,
+        priority: payload.priority,
+        manual_id: payload.manual_id,
+        completion_notes: payload.completion_notes,
+        completed_at: payload.completed_at,
+      });
+
+      const { data: actData, error: actError } = await supabase
+        .from('activities')
+        .insert({
+          user_id: user.id,
+          activity_date: payload.activity_date,
+          title: payload.title.trim(),
+          description: payload.description ? payload.description.trim() : null,
+          status: payload.is_completed ? 'completed' : 'pending',
+          notes: legacyNotes,
+        })
+        .select('*')
+        .single();
+
+      if (!actError && actData) {
+        const item = actData as any;
+        return {
+          id: item.id,
+          user_id: item.user_id,
+          manual_id: payload.manual_id || null,
+          manual_title: null,
+          activity_date: item.activity_date,
+          title: item.title,
+          description: item.description,
+          time_slot: payload.time_slot || null,
+          priority: payload.priority || 'standard',
+          is_completed: Boolean(payload.is_completed),
+          completion_notes: payload.completion_notes || null,
+          completed_at: payload.completed_at || null,
+          created_at: item.created_at,
+          updated_at: item.updated_at,
         };
       }
     }
   } catch (err) {
-    console.warn('Saved activity locally due to db error:', err);
+    console.warn('Saving activity locally due to db error:', err);
   }
 
   // Backup to local storage
   const current = getLocalActivities();
-  saveLocalActivities([...current, newActivity]);
-  return newActivity;
+  saveLocalActivities([...current, fallbackActivity]);
+  return fallbackActivity;
 }
 
+/**
+ * Update an existing activity in Supabase
+ */
 export async function updateActivity(
   id: string,
   payload: Partial<CreateActivityPayload>
 ): Promise<boolean> {
   try {
     const supabase = createBrowserSupabase();
-    const { error } = await supabase
+
+    // 1. Try 'weekly_activities'
+    const { error: weeklyError } = await supabase
       .from('weekly_activities')
       .update({
         ...(payload.title !== undefined && { title: payload.title.trim() }),
@@ -197,10 +364,43 @@ export async function updateActivity(
       })
       .eq('id', id);
 
-    if (!error) return true;
+    if (!weeklyError) return true;
+
+    // 2. Try 'activities' table
+    const updateObj: Database['public']['Tables']['activities']['Update'] = {
+      updated_at: new Date().toISOString(),
+    };
+    if (payload.title !== undefined) updateObj.title = payload.title.trim();
+    if (payload.description !== undefined) updateObj.description = payload.description;
+    if (payload.is_completed !== undefined) {
+      updateObj.status = payload.is_completed ? 'completed' : 'pending';
+    }
+
+    if (
+      payload.time_slot !== undefined ||
+      payload.priority !== undefined ||
+      payload.manual_id !== undefined ||
+      payload.completion_notes !== undefined ||
+      payload.completed_at !== undefined
+    ) {
+      updateObj.notes = encodeLegacyNotes({
+        time_slot: payload.time_slot,
+        priority: payload.priority,
+        manual_id: payload.manual_id,
+        completion_notes: payload.completion_notes,
+        completed_at: payload.completed_at,
+      });
+    }
+
+    const { error: actError } = await supabase
+      .from('activities')
+      .update(updateObj)
+      .eq('id', id);
+
+    if (!actError) return true;
   } catch {}
 
-  // Update local storage
+  // Update local storage fallback
   const current = getLocalActivities();
   const updated = current.map((item) =>
     item.id === id
@@ -215,11 +415,14 @@ export async function updateActivity(
   return true;
 }
 
+/**
+ * Delete an activity from Supabase
+ */
 export async function deleteActivity(id: string): Promise<boolean> {
   try {
     const supabase = createBrowserSupabase();
-    const { error } = await supabase.from('weekly_activities').delete().eq('id', id);
-    if (!error) return true;
+    await supabase.from('weekly_activities').delete().eq('id', id);
+    await supabase.from('activities').delete().eq('id', id);
   } catch {}
 
   const current = getLocalActivities();
@@ -273,7 +476,8 @@ export async function copyWeekActivities(
 
     const tgtMon = new Date(targetMondayStr + 'T00:00:00');
 
-    const targetPayloads: CreateActivityPayload[] = sourceActivities.map((act) => {
+    let count = 0;
+    for (const act of sourceActivities) {
       const actDate = new Date(act.activity_date + 'T00:00:00');
       const dayDiff = Math.round((actDate.getTime() - srcMon.getTime()) / (1000 * 60 * 60 * 24));
 
@@ -285,7 +489,7 @@ export async function copyWeekActivities(
       const dd = String(newDate.getDate()).padStart(2, '0');
       const targetDateStr = `${yyyy}-${mm}-${dd}`;
 
-      return {
+      await createActivity({
         activity_date: targetDateStr,
         title: act.title,
         description: act.description,
@@ -295,54 +499,11 @@ export async function copyWeekActivities(
         is_completed: resetCompleted ? false : act.is_completed,
         completion_notes: resetCompleted ? null : act.completion_notes,
         completed_at: resetCompleted ? null : act.completed_at,
-      };
-    });
-
-    const supabase = createBrowserSupabase();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (user) {
-      const rowsToInsert = targetPayloads.map((p) => ({
-        user_id: user.id,
-        manual_id: p.manual_id || null,
-        activity_date: p.activity_date,
-        title: p.title.trim(),
-        description: p.description,
-        time_slot: p.time_slot,
-        priority: p.priority || 'standard',
-        is_completed: p.is_completed || false,
-        completion_notes: p.completion_notes || null,
-        completed_at: p.completed_at || null,
-      }));
-
-      const { error } = await supabase.from('weekly_activities').insert(rowsToInsert);
-      if (!error) {
-        return { success: true, copiedCount: rowsToInsert.length };
-      }
+      });
+      count++;
     }
 
-    const currentLocal = getLocalActivities();
-    const newLocalActivities: WeeklyActivity[] = targetPayloads.map((p) => ({
-      id: `act_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-      user_id: user?.id || 'current_user',
-      manual_id: p.manual_id || null,
-      manual_title: null,
-      activity_date: p.activity_date,
-      title: p.title,
-      description: p.description || null,
-      time_slot: p.time_slot || null,
-      priority: p.priority || 'standard',
-      is_completed: Boolean(p.is_completed),
-      completion_notes: p.completion_notes || null,
-      completed_at: p.completed_at || null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }));
-
-    saveLocalActivities([...currentLocal, ...newLocalActivities]);
-    return { success: true, copiedCount: newLocalActivities.length };
+    return { success: true, copiedCount: count };
   } catch (err) {
     console.error('Failed to copy weekly activities:', err);
     return { success: false, copiedCount: 0 };

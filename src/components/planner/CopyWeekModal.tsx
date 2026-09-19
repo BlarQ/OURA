@@ -180,6 +180,7 @@ export default function CopyWeekModal({
           count === 1 ? 'activity' : 'activities'
         } to ${targetOption.label.split('(')[0].trim()}!`
       );
+      setIsCopying(false);
       onClose();
     } catch (err: any) {
       console.error('Copy execution failed:', err);

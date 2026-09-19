@@ -67,6 +67,8 @@ CREATE TABLE IF NOT EXISTS public.weekly_activities (
     time_slot TEXT,
     priority TEXT NOT NULL DEFAULT 'standard' CHECK (priority IN ('routine', 'standard', 'critical')),
     is_completed BOOLEAN NOT NULL DEFAULT false,
+    completion_notes TEXT,
+    completed_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
