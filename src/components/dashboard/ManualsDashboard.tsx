@@ -262,7 +262,7 @@ export default function ManualsDashboard({
                     className="btn-sprout-primary text-xs sm:text-sm w-full sm:w-auto text-center"
                   >
                     <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
-                    <span>+ New Manual</span>
+                    <span>New Manual</span>
                   </Link>
                 </div>
               </div>
@@ -298,7 +298,7 @@ export default function ManualsDashboard({
                   className="btn-sprout-primary text-xs sm:text-sm shrink-0"
                 >
                   <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
-                  <span>+ New Manual</span>
+                  <span>New Manual</span>
                 </Link>
               </div>
 
