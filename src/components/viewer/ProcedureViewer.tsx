@@ -16,6 +16,9 @@ import {
 import type { ManualWithSteps } from '@/lib/services/manuals';
 import { deleteManual } from '@/lib/services/manuals';
 import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
+import DocumentPreview from '@/components/viewer/DocumentPreview';
+import DocumentPreviewModal from '@/components/viewer/DocumentPreviewModal';
+import { isDocumentUrl } from '@/lib/utils/documentUtils';
 
 interface ProcedureViewerProps {
   manual: ManualWithSteps;
@@ -31,6 +34,7 @@ export default function ProcedureViewer({
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState<{ url: string; title: string; fileName?: string } | null>(null);
 
   const steps = manual.steps && manual.steps.length > 0 ? manual.steps : [];
 
@@ -81,6 +85,14 @@ export default function ProcedureViewer({
         manualTitle={manual.title}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDeleteManual}
+      />
+
+      <DocumentPreviewModal
+        isOpen={!!previewDoc}
+        onClose={() => setPreviewDoc(null)}
+        documentUrl={previewDoc?.url || null}
+        documentTitle={previewDoc?.title || ''}
+        documentFileName={previewDoc?.fileName}
       />
 
       <div>
@@ -207,10 +219,20 @@ export default function ProcedureViewer({
                       </p>
                     )}
 
-                    {/* Media Render: Optimized Image or Native Video Player */}
+                    {/* Media Render: Document Preview, Video Player, or Optimized Image */}
                     {step.media_url && (
                       <div className="pt-2">
-                        {step.media_type === 'video' || step.media_url.endsWith('.mp4') ? (
+                        {step.media_type === 'document' || isDocumentUrl(step.media_url) ? (
+                          <div className="max-w-3xl">
+                            <DocumentPreview
+                              mediaUrl={step.media_url}
+                              stepTitle={step.title || `Step ${step.step_order || idx + 1}`}
+                              onOpenModal={(url, title, name) =>
+                                setPreviewDoc({ url, title, fileName: name })
+                              }
+                            />
+                          </div>
+                        ) : step.media_type === 'video' || step.media_url.endsWith('.mp4') ? (
                           <div className="rounded-2xl overflow-hidden bg-black border border-ash-gray max-w-2xl">
                             <video
                               controls
@@ -306,7 +328,17 @@ export default function ProcedureViewer({
                     {/* Media */}
                     {currentStep.media_url && (
                       <div className="pt-2">
-                        {currentStep.media_type === 'video' || currentStep.media_url.endsWith('.mp4') ? (
+                        {currentStep.media_type === 'document' || isDocumentUrl(currentStep.media_url) ? (
+                          <div className="max-w-3xl">
+                            <DocumentPreview
+                              mediaUrl={currentStep.media_url}
+                              stepTitle={currentStep.title || `Step ${currentStep.step_order || currentStepIndex + 1}`}
+                              onOpenModal={(url, title, name) =>
+                                setPreviewDoc({ url, title, fileName: name })
+                              }
+                            />
+                          </div>
+                        ) : currentStep.media_type === 'video' || currentStep.media_url.endsWith('.mp4') ? (
                           <div className="rounded-2xl overflow-hidden bg-black border border-ash-gray max-w-2xl">
                             <video
                               controls

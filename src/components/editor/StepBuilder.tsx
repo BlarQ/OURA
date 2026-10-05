@@ -11,17 +11,26 @@ import {
   Camera,
   UploadCloud,
   Video,
+  FileText,
+  FileSpreadsheet,
+  FileCode,
+  File,
   Loader2,
   X,
   ChevronUp,
   ChevronDown,
   Image as ImageIcon,
   AlertCircle,
+  Maximize2,
+  Download,
+  ExternalLink,
 } from 'lucide-react';
 import type { ManualWithSteps } from '@/lib/services/manuals';
 import { saveManualWithSteps, uploadMediaToStorage, deleteManual } from '@/lib/services/manuals';
 import { compressVideoClient } from '@/lib/videoCompression';
 import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
+import DocumentPreviewModal from '@/components/viewer/DocumentPreviewModal';
+import { isDocumentUrl, formatDocumentName } from '@/lib/utils/documentUtils';
 
 export interface StepItem {
   id?: string;
@@ -52,7 +61,15 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
           title: s.title || '',
           description: s.description || '',
           media_url: s.media_url || null,
-          media_type: (s.media_type as any) || (s.media_url ? (s.media_url.endsWith('.mp4') ? 'video' : 'image') : 'none'),
+          media_type:
+            (s.media_type as any) ||
+            (s.media_url
+              ? s.media_url.endsWith('.mp4')
+                ? 'video'
+                : isDocumentUrl(s.media_url)
+                ? 'document'
+                : 'image'
+              : 'none'),
           media_file_name: s.media_url ? 'Attachment Synced' : undefined,
           media_file_size: s.media_url ? 'Ready' : undefined,
         }))
@@ -71,6 +88,7 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
   const [lastSavedTime, setLastSavedTime] = useState<string>('Just now');
   const [saveError, setSaveError] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState<{ url: string; title: string; fileName?: string } | null>(null);
 
   // Upload & Compression State per Step
   const [activeUploadIdx, setActiveUploadIdx] = useState<number | null>(null);
@@ -81,6 +99,7 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
   const cameraInputRefs = useRef<{ [key: number]: HTMLInputElement | null }>({});
   const imageFileInputRefs = useRef<{ [key: number]: HTMLInputElement | null }>({});
   const videoFileInputRefs = useRef<{ [key: number]: HTMLInputElement | null }>({});
+  const documentFileInputRefs = useRef<{ [key: number]: HTMLInputElement | null }>({});
 
   // Auto-save debounce effect
   useEffect(() => {
@@ -286,6 +305,48 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
     }
   };
 
+  // Document Upload Handler (PDF, Word, Excel, Text, Config files)
+  const handleDocumentUpload = async (
+    index: number,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setActiveUploadIdx(index);
+    setUploadPercent(20);
+    setUploadStatusText('Uploading document to Supabase Storage...');
+
+    try {
+      const fileNameCustom = `doc_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      const publicUrl = await uploadMediaToStorage(file, manual.id, fileNameCustom, file.type);
+
+      if (!publicUrl) throw new Error('Document storage upload failed');
+
+      setUploadPercent(100);
+      setUploadStatusText('Document uploaded successfully!');
+
+      const formattedSize =
+        file.size > 1024 * 1024
+          ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
+          : `${Math.round(file.size / 1024)} KB`;
+
+      updateStepField(index, 'media_url', publicUrl);
+      updateStepField(index, 'media_type', 'document');
+      updateStepField(index, 'media_file_name', file.name);
+      updateStepField(index, 'media_file_size', formattedSize);
+    } catch (err: any) {
+      console.error('Document upload failed:', err);
+      setSaveError('Failed to upload document. Please try again.');
+    } finally {
+      setTimeout(() => {
+        setActiveUploadIdx(null);
+        setUploadPercent(0);
+        setUploadStatusText('');
+      }, 400);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-paper-white text-ink-black font-sans pb-28 selection:bg-sprout-green selection:text-ink-black">
       <DeleteConfirmModal
@@ -293,6 +354,14 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
         manualTitle={title || manual.title}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDeleteManual}
+      />
+
+      <DocumentPreviewModal
+        isOpen={!!previewDoc}
+        onClose={() => setPreviewDoc(null)}
+        documentUrl={previewDoc?.url || null}
+        documentTitle={previewDoc?.title || ''}
+        documentFileName={previewDoc?.fileName}
       />
 
       {/* Top Navbar */}
@@ -455,17 +524,24 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
                   /* Attached Media Preview */
                   <div className="p-4 rounded-2xl bg-slate-100 border border-ash-gray space-y-3">
                     <div className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
                         <div className="h-9 w-9 rounded-md bg-ink-black text-paper-white flex items-center justify-center shrink-0">
-                          {step.media_type === 'video' ? (
+                          {step.media_type === 'video' || (step.media_url && step.media_url.endsWith('.mp4')) ? (
                             <Video className="h-4 w-4" />
+                          ) : step.media_type === 'document' || (step.media_url && isDocumentUrl(step.media_url)) ? (
+                            <FileText className="h-4 w-4 text-sprout-green" />
                           ) : (
                             <ImageIcon className="h-4 w-4" />
                           )}
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <span className="text-xs font-bold text-ink-black block truncate max-w-xs sm:max-w-md">
-                            {step.media_file_name || (step.media_type === 'video' ? 'Video Attachment' : 'Image Attachment')}
+                            {step.media_file_name ||
+                              (step.media_type === 'video' || (step.media_url && step.media_url.endsWith('.mp4'))
+                                ? 'Video Attachment'
+                                : step.media_type === 'document' || (step.media_url && isDocumentUrl(step.media_url))
+                                ? formatDocumentName(step.media_url, undefined, step.title)
+                                : 'Image Attachment')}
                           </span>
                           <span className="text-[11px] text-pewter font-bold">
                             ✓ {step.media_file_size || 'Attached to step'}
@@ -473,30 +549,101 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
                         </div>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          updateStepField(idx, 'media_url', null);
-                          updateStepField(idx, 'media_type', 'none');
-                          updateStepField(idx, 'media_file_name', undefined);
-                          updateStepField(idx, 'media_file_size', undefined);
-                        }}
-                        className="p-1.5 text-pewter hover:text-red-600 hover:bg-white rounded-md transition cursor-pointer"
-                        title="Remove attachment"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {(step.media_type === 'document' || (step.media_url && isDocumentUrl(step.media_url))) && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setPreviewDoc({
+                                url: step.media_url!,
+                                title: step.title || `Step ${idx + 1}`,
+                                fileName: step.media_file_name,
+                              })
+                            }
+                            className="btn-sprout-primary text-xs py-1 px-2.5 flex items-center gap-1 cursor-pointer shadow-xs"
+                            title="Preview document in platform"
+                          >
+                            <Maximize2 className="h-3.5 w-3.5" />
+                            <span>Preview</span>
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            updateStepField(idx, 'media_url', null);
+                            updateStepField(idx, 'media_type', 'none');
+                            updateStepField(idx, 'media_file_name', undefined);
+                            updateStepField(idx, 'media_file_size', undefined);
+                          }}
+                          className="p-1.5 text-pewter hover:text-red-600 hover:bg-white rounded-md transition cursor-pointer"
+                          title="Remove attachment"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
 
-                    {/* Media Thumbnail / Video Player */}
+                    {/* Media Thumbnail / Video Player / Document Preview Card */}
                     <div className="pt-2 border-t border-ash-gray">
-                      {step.media_type === 'video' ? (
+                      {step.media_type === 'video' || (step.media_url && step.media_url.endsWith('.mp4')) ? (
                         <div className="relative rounded-2xl overflow-hidden bg-black max-w-lg border border-ash-gray">
                           <video
                             controls
                             src={step.media_url}
                             className="w-full max-h-64 object-contain rounded-2xl"
                           />
+                        </div>
+                      ) : step.media_type === 'document' || (step.media_url && isDocumentUrl(step.media_url)) ? (
+                        <div className="rounded-xl border border-ash-gray bg-paper-white p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 max-w-2xl">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="h-8 w-8 rounded-md bg-slate-100 flex items-center justify-center shrink-0 border border-ash-gray">
+                              <FileText className="h-4 w-4 text-ink-black" />
+                            </div>
+                            <div className="min-w-0 text-xs">
+                              <span className="font-extrabold text-ink-black block truncate">
+                                {formatDocumentName(step.media_url, step.media_file_name, step.title)}
+                              </span>
+                              <span className="text-[11px] text-pewter">
+                                Document attached • Ready for platform preview
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setPreviewDoc({
+                                  url: step.media_url!,
+                                  title: step.title || `Step ${idx + 1}`,
+                                  fileName: step.media_file_name,
+                                })
+                              }
+                              className="btn-sprout-ghost text-xs py-1 px-2 flex items-center gap-1"
+                            >
+                              <Maximize2 className="h-3 w-3" />
+                              <span>Preview Doc</span>
+                            </button>
+                            <a
+                              href={step.media_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1 text-pewter hover:text-ink-black hover:bg-slate-100 rounded transition"
+                              title="Open in new window"
+                            >
+                              <ExternalLink className="h-3.5 w-3.5" />
+                            </a>
+                            <a
+                              href={step.media_url}
+                              download={step.media_file_name || 'document'}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1 text-pewter hover:text-ink-black hover:bg-slate-100 rounded transition"
+                              title="Download document"
+                            >
+                              <Download className="h-3.5 w-3.5" />
+                            </a>
+                          </div>
                         </div>
                       ) : (
                         <div className="relative rounded-2xl overflow-hidden bg-white max-w-sm border border-ash-gray">
@@ -547,6 +694,17 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
                       className="hidden"
                     />
 
+                    {/* Document File Picker */}
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.log,.md,.json,.yaml,.yml,.xml,.sql,.sh,.bat,.conf,.ini,.rtf,.odt,application/pdf,text/*"
+                      ref={(el) => {
+                        documentFileInputRefs.current[idx] = el;
+                      }}
+                      onChange={(e) => handleDocumentUpload(idx, e)}
+                      className="hidden"
+                    />
+
                     {activeUploadIdx === idx ? (
                       /* Active Upload Progress Box */
                       <div className="p-6 rounded-2xl bg-slate-100 border border-ash-gray text-center space-y-3">
@@ -565,8 +723,8 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
                         </span>
                       </div>
                     ) : (
-                      /* 3 Clean Action Triggers */
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-2xl border border-dashed border-smoke-gray bg-paper-white">
+                      /* 4 Clean Action Triggers */
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 p-4 rounded-2xl border border-dashed border-smoke-gray bg-paper-white">
                         <button
                           type="button"
                           onClick={() => cameraInputRefs.current[idx]?.click()}
@@ -591,7 +749,16 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
                           className="btn-sprout-ghost w-full py-2.5 text-xs flex items-center justify-center gap-2"
                         >
                           <Video className="h-4 w-4" />
-                          <span>720p Video (FFmpeg)</span>
+                          <span>720p Video</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => documentFileInputRefs.current[idx]?.click()}
+                          className="btn-sprout-ghost w-full py-2.5 text-xs flex items-center justify-center gap-2 border-sprout-green/80 hover:border-ink-black"
+                        >
+                          <FileText className="h-4 w-4" />
+                          <span>Upload Doc</span>
                         </button>
                       </div>
                     )}

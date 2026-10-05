@@ -209,12 +209,21 @@ export async function uploadMediaToStorage(
       (fileOrBlob instanceof File ? fileOrBlob.type : fileOrBlob.type || 'application/octet-stream');
 
     let fileExt = 'bin';
-    if (mimeType.startsWith('image/')) {
-      fileExt = mimeType.split('/')[1]?.replace('jpeg', 'jpg') || 'png';
-    } else if (mimeType.startsWith('video/')) {
-      fileExt = 'mp4';
-    } else if (fileOrBlob instanceof File) {
-      fileExt = fileOrBlob.name.split('.').pop() || 'bin';
+    if (fileOrBlob instanceof File) {
+      const parts = fileOrBlob.name.split('.');
+      if (parts.length > 1) {
+        fileExt = parts.pop()?.toLowerCase() || 'bin';
+      }
+    }
+
+    if (fileExt === 'bin') {
+      if (mimeType.startsWith('image/')) {
+        fileExt = mimeType.split('/')[1]?.replace('jpeg', 'jpg') || 'png';
+      } else if (mimeType.startsWith('video/')) {
+        fileExt = 'mp4';
+      } else if (mimeType === 'application/pdf') {
+        fileExt = 'pdf';
+      }
     }
 
     const cleanBaseName = fileNameCustom
