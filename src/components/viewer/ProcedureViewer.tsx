@@ -15,7 +15,7 @@ import {
   Maximize2,
 } from 'lucide-react';
 import type { ManualWithSteps } from '@/lib/services/manuals';
-import { deleteManual } from '@/lib/services/manuals';
+import { deleteManual, saveManualWithSteps } from '@/lib/services/manuals';
 import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 import DocumentPreview from '@/components/viewer/DocumentPreview';
 import DocumentPreviewModal from '@/components/viewer/DocumentPreviewModal';
@@ -36,8 +36,25 @@ export default function ProcedureViewer({
   const [isCompleted, setIsCompleted] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<{ url: string; title: string; fileName?: string } | null>(null);
+  const [steps, setSteps] = useState(manual.steps && manual.steps.length > 0 ? manual.steps : []);
 
-  const steps = manual.steps && manual.steps.length > 0 ? manual.steps : [];
+  const handleStepReupload = async (stepIndex: number, newDataUrl: string) => {
+    const updated = steps.map((s, idx) =>
+      idx === stepIndex
+        ? {
+            ...s,
+            media_url: newDataUrl,
+            media_type: 'document' as const,
+          }
+        : s
+    );
+    setSteps(updated);
+    try {
+      await saveManualWithSteps(manual.id, manual.title, updated);
+    } catch (e) {
+      console.warn('Re-upload sync warning:', e);
+    }
+  };
 
   const handleNext = () => {
     if (currentStepIndex === steps.length - 1) {
@@ -229,6 +246,7 @@ export default function ProcedureViewer({
                               onOpenModal={(url, title, name) =>
                                 setPreviewDoc({ url, title, fileName: name })
                               }
+                              onReupload={(newDataUrl) => handleStepReupload(idx, newDataUrl)}
                             />
                           </div>
                         ) : step.media_type === 'video' || step.media_url.endsWith('.mp4') ? (
@@ -359,6 +377,7 @@ export default function ProcedureViewer({
                               onOpenModal={(url, title, name) =>
                                 setPreviewDoc({ url, title, fileName: name })
                               }
+                              onReupload={(newDataUrl) => handleStepReupload(currentStepIndex, newDataUrl)}
                             />
                           </div>
                         ) : currentStep.media_type === 'video' || currentStep.media_url.endsWith('.mp4') ? (

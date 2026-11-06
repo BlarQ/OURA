@@ -57,32 +57,32 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
   const [steps, setSteps] = useState<StepItem[]>(
     manual.steps && manual.steps.length > 0
       ? manual.steps.map((s, idx) => ({
-          id: s.id,
-          step_order: idx + 1,
-          title: s.title || '',
-          description: s.description || '',
-          media_url: s.media_url || null,
-          media_type:
-            (s.media_type as any) ||
-            (s.media_url
-              ? s.media_url.endsWith('.mp4')
-                ? 'video'
-                : isDocumentUrl(s.media_url)
+        id: s.id,
+        step_order: idx + 1,
+        title: s.title || '',
+        description: s.description || '',
+        media_url: s.media_url || null,
+        media_type:
+          (s.media_type as any) ||
+          (s.media_url
+            ? s.media_url.endsWith('.mp4')
+              ? 'video'
+              : isDocumentUrl(s.media_url)
                 ? 'document'
                 : 'image'
-              : 'none'),
-          media_file_name: s.media_url ? formatDocumentName(s.media_url, undefined, s.title) : undefined,
-          media_file_size: s.media_url ? 'Attached' : undefined,
-        }))
+            : 'none'),
+        media_file_name: s.media_url ? formatDocumentName(s.media_url, undefined, s.title) : undefined,
+        media_file_size: s.media_url ? 'Attached' : undefined,
+      }))
       : [
-          {
-            step_order: 1,
-            title: 'Initial Setup & Prerequisites',
-            description: 'Verify prerequisites and prepare target environment.',
-            media_url: null,
-            media_type: 'none',
-          },
-        ]
+        {
+          step_order: 1,
+          title: 'Initial Setup & Prerequisites',
+          description: 'Verify prerequisites and prepare target environment.',
+          media_url: null,
+          media_type: 'none',
+        },
+      ]
   );
 
   const [isSaving, setIsSaving] = useState(false);
@@ -643,8 +643,8 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
                               (step.media_type === 'video' || (step.media_url && step.media_url.endsWith('.mp4'))
                                 ? 'Video Attachment'
                                 : step.media_type === 'document' || (step.media_url && isDocumentUrl(step.media_url))
-                                ? formatDocumentName(step.media_url, undefined, step.title)
-                                : 'Image Attachment')}
+                                  ? formatDocumentName(step.media_url, undefined, step.title)
+                                  : 'Image Attachment')}
                           </span>
                           <span className="text-[11px] text-pewter font-bold">
                             ✓ {step.media_file_size || 'Attached to step'}

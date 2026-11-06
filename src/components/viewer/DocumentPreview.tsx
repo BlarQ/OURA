@@ -24,6 +24,7 @@ interface DocumentPreviewProps {
   fileSize?: string;
   compact?: boolean;
   onOpenModal?: (url: string, title: string, fileName?: string) => void;
+  onReupload?: (newDataUrl: string, file: File) => void;
 }
 
 export default function DocumentPreview({
@@ -33,6 +34,7 @@ export default function DocumentPreview({
   fileSize,
   compact = false,
   onOpenModal,
+  onReupload,
 }: DocumentPreviewProps) {
   const [textContent, setTextContent] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -189,6 +191,7 @@ export default function DocumentPreview({
               title={displayName}
               compact={false}
               onExpand={onOpenModal ? () => onOpenModal(mediaUrl, stepTitle, displayName) : undefined}
+              onReupload={onReupload}
             />
           ) : meta.category === 'text' && textContent !== null ? (
             <div className="p-4 sm:p-5 max-h-80 sm:max-h-96 overflow-auto font-mono text-xs text-slate-100 bg-slate-950 leading-relaxed whitespace-pre custom-scrollbar">

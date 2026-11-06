@@ -15,6 +15,7 @@ import {
   Layers,
   Sparkles,
   AlertCircle,
+  UploadCloud,
 } from 'lucide-react';
 
 interface PdfViewerProps {
@@ -24,6 +25,7 @@ interface PdfViewerProps {
   compact?: boolean;
   initialZoom?: number;
   onExpand?: () => void;
+  onReupload?: (newDataUrl: string, file: File) => void;
 }
 
 export default function PdfViewer({
@@ -33,33 +35,71 @@ export default function PdfViewer({
   compact = false,
   initialZoom = 100,
   onExpand,
+  onReupload,
 }: PdfViewerProps) {
+  const [currentUrl, setCurrentUrl] = useState<string>(url);
   const [numPages, setNumPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [zoom, setZoom] = useState<number>(initialZoom);
   const [viewMode, setViewMode] = useState<'canvas' | 'native'>('canvas');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [bucketError, setBucketError] = useState<{ isBucketMissing: boolean; message: string } | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const pdfDocRef = useRef<any>(null);
   const renderTaskRef = useRef<any>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const displayName = fileName || (title.endsWith('.pdf') ? title : `${title}.pdf`);
 
-  // Load PDF Document via PDF.js
+  // Synchronize internal URL if prop changes
+  useEffect(() => {
+    setCurrentUrl(url);
+  }, [url]);
+
+  // Load PDF Document via PDF.js with network probe
   useEffect(() => {
     let isCancelled = false;
     setIsLoading(true);
     setError(null);
+    setBucketError(null);
 
     async function loadPdf() {
       try {
+        // If it's a remote URL, check if it returns 404 or a Supabase NoSuchBucket error
+        if (currentUrl.startsWith('http://') || currentUrl.startsWith('https://')) {
+          try {
+            const probeRes = await fetch(currentUrl, { method: 'GET' });
+            if (!probeRes.ok) {
+              const probeText = await probeRes.text();
+              if (
+                probeText.includes('Bucket not found') ||
+                probeText.includes('NoSuchBucket') ||
+                probeRes.status === 404
+              ) {
+                if (!isCancelled) {
+                  setBucketError({
+                    isBucketMissing: probeText.includes('Bucket not found') || probeText.includes('NoSuchBucket'),
+                    message: probeText.includes('Bucket not found') || probeText.includes('NoSuchBucket')
+                      ? 'The Supabase storage bucket "manual_media" was not found in your Supabase project (kjgtswzvvlabgkrldbyo).'
+                      : `Unable to retrieve document from storage server (${probeRes.status} ${probeRes.statusText}).`,
+                  });
+                  setIsLoading(false);
+                }
+                return;
+              }
+            }
+          } catch (probeErr) {
+            console.warn('Network probe error:', probeErr);
+          }
+        }
+
         const pdfjsLib = await import('pdfjs-dist');
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version || '4.10.38'}/build/pdf.worker.min.mjs`;
 
         const loadingTask = pdfjsLib.getDocument({
-          url,
+          url: currentUrl,
           cMapUrl: 'https://unpkg.com/pdfjs-dist@4.10.38/cmaps/',
           cMapPacked: true,
         });
@@ -72,8 +112,17 @@ export default function PdfViewer({
         setCurrentPage(1);
         setIsLoading(false);
       } catch (err: any) {
-        console.warn('PDF.js canvas engine failed, falling back to native engine:', err);
+        console.warn('PDF.js canvas engine failed, checking cause:', err);
         if (!isCancelled) {
+          if (currentUrl.includes('manual_media')) {
+            setBucketError({
+              isBucketMissing: true,
+              message: 'The Supabase storage bucket "manual_media" was not found in your Supabase project (kjgtswzvvlabgkrldbyo).',
+            });
+            setIsLoading(false);
+            return;
+          }
+
           setViewMode('native');
           setIsLoading(false);
         }
@@ -92,7 +141,25 @@ export default function PdfViewer({
         }
       }
     };
-  }, [url]);
+  }, [currentUrl]);
+
+  const handleLocalFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        const dataUrl = reader.result;
+        setCurrentUrl(dataUrl);
+        setBucketError(null);
+        setViewMode('canvas');
+        onReupload?.(dataUrl, file);
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
 
   // Render Page to Canvas
   const renderPage = useCallback(async (pageNumber: number, scalePercent: number) => {
@@ -304,7 +371,58 @@ export default function PdfViewer({
           </div>
         )}
 
-        {viewMode === 'canvas' ? (
+        {bucketError ? (
+          /* Missing Storage Bucket Recovery Card */
+          <div className="w-full max-w-xl mx-auto p-6 sm:p-8 rounded-2xl bg-slate-900 border border-slate-700 text-center space-y-4 my-auto animate-modal-in">
+            <div className="h-12 w-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 mx-auto flex items-center justify-center">
+              <AlertCircle className="h-6 w-6" />
+            </div>
+
+            <div className="space-y-1.5">
+              <span className="badge-sprout-neutral text-[10px] py-0.5 px-2 bg-amber-500/20 text-amber-300 border-amber-500/30 font-bold uppercase">
+                Supabase Storage Bucket Setup Required
+              </span>
+              <h3 className="text-base sm:text-lg font-extrabold text-white">
+                Bucket &quot;manual_media&quot; Not Found
+              </h3>
+              <p className="text-xs text-slate-300 max-w-md mx-auto leading-relaxed">
+                {bucketError.message}
+              </p>
+            </div>
+
+            {/* Direct Re-upload Action */}
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="application/pdf,.pdf"
+                onChange={handleLocalFileSelect}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="btn-sprout-primary text-xs py-2 px-4 flex items-center gap-2 cursor-pointer w-full sm:w-auto justify-center shadow-md active:scale-95"
+              >
+                <UploadCloud className="h-4 w-4" />
+                <span>Select &amp; View PDF Document</span>
+              </button>
+            </div>
+
+            {/* Quick 1-Minute Fix Guide */}
+            <div className="mt-4 p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 text-left text-xs space-y-2 text-slate-300">
+              <span className="font-extrabold text-slate-200 block text-[11px] uppercase tracking-wider">
+                Permanent Fix: Create the bucket in your Supabase Dashboard:
+              </span>
+              <ol className="list-decimal list-inside space-y-1 text-[11px] text-slate-400">
+                <li>Log in to your Supabase project dashboard (<span className="text-sprout-green font-semibold">Storage</span> tab).</li>
+                <li>Click <strong className="text-slate-200">New Bucket</strong>.</li>
+                <li>Set Bucket name to <code className="text-white bg-slate-800 px-1.5 py-0.5 rounded font-mono font-bold">manual_media</code>.</li>
+                <li>Turn <strong className="text-slate-200">Public bucket</strong> to <strong className="text-emerald-400 font-bold">ON</strong> and click Save.</li>
+              </ol>
+            </div>
+          </div>
+        ) : viewMode === 'canvas' ? (
           /* High-Definition HTML5 Canvas Page Viewer */
           <div className="flex flex-col items-center justify-center max-w-full my-auto">
             <div className="shadow-2xl rounded-sm overflow-hidden bg-white border border-slate-700 max-w-full">
