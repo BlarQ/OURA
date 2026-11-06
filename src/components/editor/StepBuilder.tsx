@@ -24,6 +24,7 @@ import {
   Maximize2,
   Download,
   ExternalLink,
+  Eye,
 } from 'lucide-react';
 import type { ManualWithSteps } from '@/lib/services/manuals';
 import { saveManualWithSteps, uploadMediaToStorage, deleteManual } from '@/lib/services/manuals';
@@ -70,8 +71,8 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
                 ? 'document'
                 : 'image'
               : 'none'),
-          media_file_name: s.media_url ? 'Attachment Synced' : undefined,
-          media_file_size: s.media_url ? 'Ready' : undefined,
+          media_file_name: s.media_url ? formatDocumentName(s.media_url, undefined, s.title) : undefined,
+          media_file_size: s.media_url ? 'Attached' : undefined,
         }))
       : [
           {
@@ -202,19 +203,26 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
     field: keyof StepItem,
     value: any
   ) => {
-    const updated = [...steps];
-    updated[index] = { ...updated[index], [field]: value };
-    setSteps(updated);
+    setSteps((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
   };
 
-  // Image Upload Handler (Native Camera or Photo Picker)
-  const handleImageUpload = async (
+  const updateStepFields = (
     index: number,
-    e: React.ChangeEvent<HTMLInputElement>
+    fields: Partial<StepItem>
   ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    setSteps((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], ...fields };
+      return updated;
+    });
+  };
 
+  // Image Upload Processor (Camera or Photo Picker or Drag & Drop)
+  const processImageFile = async (index: number, file: File) => {
     setActiveUploadIdx(index);
     setUploadPercent(20);
     setUploadStatusText('Uploading image to Supabase Storage...');
@@ -233,10 +241,23 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
           ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
           : `${Math.round(file.size / 1024)} KB`;
 
-      updateStepField(index, 'media_url', publicUrl);
-      updateStepField(index, 'media_type', 'image');
-      updateStepField(index, 'media_file_name', file.name);
-      updateStepField(index, 'media_file_size', formattedSize);
+      const newFields = {
+        media_url: publicUrl,
+        media_type: 'image' as const,
+        media_file_name: file.name,
+        media_file_size: formattedSize,
+      };
+
+      updateStepFields(index, newFields);
+
+      // Immediately save to database so the upload is NEVER lost
+      setLastSavedTime('Saving...');
+      const targetSteps = steps.map((s, idx) => (idx === index ? { ...s, ...newFields } : s));
+      const ok = await saveManualWithSteps(manual.id, title, targetSteps);
+      if (ok) {
+        setLastSavedTime('Synced');
+        setSaveError(null);
+      }
     } catch (err: any) {
       console.error('Image upload failed:', err);
       setSaveError('Failed to upload image. Please try again.');
@@ -249,14 +270,17 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
     }
   };
 
-  // Video Upload Handler with Client-Side FFmpeg Compression
-  const handleVideoUpload = async (
+  const handleImageUpload = (
     index: number,
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (file) processImageFile(index, file);
+    e.target.value = '';
+  };
 
+  // Video Upload Processor with Client-Side FFmpeg Compression
+  const processVideoFile = async (index: number, file: File) => {
     setActiveUploadIdx(index);
     setUploadPercent(5);
     setUploadStatusText('Compressing video via FFmpeg (720p)...');
@@ -289,10 +313,23 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
           ? `${(compressedSize / (1024 * 1024)).toFixed(1)} MB`
           : `${Math.round(compressedSize / 1024)} KB`;
 
-      updateStepField(index, 'media_url', publicUrl);
-      updateStepField(index, 'media_type', 'video');
-      updateStepField(index, 'media_file_name', name || file.name);
-      updateStepField(index, 'media_file_size', `${formattedSize} (${compressionRatio})`);
+      const newFields = {
+        media_url: publicUrl,
+        media_type: 'video' as const,
+        media_file_name: name || file.name,
+        media_file_size: `${formattedSize} (${compressionRatio})`,
+      };
+
+      updateStepFields(index, newFields);
+
+      // Immediately save to database
+      setLastSavedTime('Saving...');
+      const targetSteps = steps.map((s, idx) => (idx === index ? { ...s, ...newFields } : s));
+      const ok = await saveManualWithSteps(manual.id, title, targetSteps);
+      if (ok) {
+        setLastSavedTime('Synced');
+        setSaveError(null);
+      }
     } catch (err: any) {
       console.error('Video compression or upload failed:', err);
       setSaveError('Video upload failed. Please try again.');
@@ -305,14 +342,17 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
     }
   };
 
-  // Document Upload Handler (PDF, Word, Excel, Text, Config files)
-  const handleDocumentUpload = async (
+  const handleVideoUpload = (
     index: number,
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (file) processVideoFile(index, file);
+    e.target.value = '';
+  };
 
+  // Document Upload Processor (PDF, Word, Excel, Text, Config files)
+  const processDocumentFile = async (index: number, file: File) => {
     setActiveUploadIdx(index);
     setUploadPercent(20);
     setUploadStatusText('Uploading document to Supabase Storage...');
@@ -331,10 +371,23 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
           ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
           : `${Math.round(file.size / 1024)} KB`;
 
-      updateStepField(index, 'media_url', publicUrl);
-      updateStepField(index, 'media_type', 'document');
-      updateStepField(index, 'media_file_name', file.name);
-      updateStepField(index, 'media_file_size', formattedSize);
+      const newFields = {
+        media_url: publicUrl,
+        media_type: 'document' as const,
+        media_file_name: file.name,
+        media_file_size: formattedSize,
+      };
+
+      updateStepFields(index, newFields);
+
+      // Immediately save to database so the upload is NEVER lost
+      setLastSavedTime('Saving...');
+      const targetSteps = steps.map((s, idx) => (idx === index ? { ...s, ...newFields } : s));
+      const ok = await saveManualWithSteps(manual.id, title, targetSteps);
+      if (ok) {
+        setLastSavedTime('Synced');
+        setSaveError(null);
+      }
     } catch (err: any) {
       console.error('Document upload failed:', err);
       setSaveError('Failed to upload document. Please try again.');
@@ -345,6 +398,47 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
         setUploadStatusText('');
       }, 400);
     }
+  };
+
+  const handleDocumentUpload = (
+    index: number,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) processDocumentFile(index, file);
+    e.target.value = '';
+  };
+
+  // Drag and Drop Handler directly onto a step
+  const handleStepDrop = (index: number, e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    if (file.type.startsWith('image/') || ['png', 'jpg', 'jpeg', 'webp', 'svg'].includes(ext)) {
+      processImageFile(index, file);
+    } else if (file.type.startsWith('video/') || ['mp4', 'mov', 'webm'].includes(ext)) {
+      processVideoFile(index, file);
+    } else {
+      processDocumentFile(index, file);
+    }
+  };
+
+  const handleRemoveAttachment = async (index: number) => {
+    const clearedFields = {
+      media_url: null,
+      media_type: 'none' as const,
+      media_file_name: undefined,
+      media_file_size: undefined,
+    };
+
+    updateStepFields(index, clearedFields);
+
+    const targetSteps = steps.map((s, idx) => (idx === index ? { ...s, ...clearedFields } : s));
+    setLastSavedTime('Saving...');
+    const ok = await saveManualWithSteps(manual.id, title, targetSteps);
+    if (ok) setLastSavedTime('Synced');
   };
 
   return (
@@ -382,7 +476,16 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link
+              href={`/manuals/${manual.id}`}
+              className="btn-sprout-ghost text-xs py-1.5 px-2.5 sm:px-3 hidden sm:flex items-center gap-1.5 cursor-pointer"
+              title="Preview procedure manual"
+            >
+              <Eye className="h-3.5 w-3.5" />
+              <span>View Manual</span>
+            </Link>
+
             <button
               type="button"
               onClick={() => setShowDeleteModal(true)}
@@ -550,7 +653,7 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
                       </div>
 
                       <div className="flex items-center gap-1.5 shrink-0">
-                        {(step.media_type === 'document' || (step.media_url && isDocumentUrl(step.media_url))) && (
+                        {step.media_url && (
                           <button
                             type="button"
                             onClick={() =>
@@ -561,7 +664,7 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
                               })
                             }
                             className="btn-sprout-primary text-xs py-1 px-2.5 flex items-center gap-1 cursor-pointer shadow-xs"
-                            title="Preview document in platform"
+                            title="Preview document or image in high resolution"
                           >
                             <Maximize2 className="h-3.5 w-3.5" />
                             <span>Preview</span>
@@ -570,12 +673,7 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
 
                         <button
                           type="button"
-                          onClick={() => {
-                            updateStepField(idx, 'media_url', null);
-                            updateStepField(idx, 'media_type', 'none');
-                            updateStepField(idx, 'media_file_name', undefined);
-                            updateStepField(idx, 'media_file_size', undefined);
-                          }}
+                          onClick={() => handleRemoveAttachment(idx)}
                           className="p-1.5 text-pewter hover:text-red-600 hover:bg-white rounded-md transition cursor-pointer"
                           title="Remove attachment"
                         >
@@ -619,7 +717,7 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
                                   fileName: step.media_file_name,
                                 })
                               }
-                              className="btn-sprout-ghost text-xs py-1 px-2 flex items-center gap-1"
+                              className="btn-sprout-ghost text-xs py-1 px-2 flex items-center gap-1 cursor-pointer"
                             >
                               <Maximize2 className="h-3 w-3" />
                               <span>Preview Doc</span>
@@ -646,20 +744,45 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
                           </div>
                         </div>
                       ) : (
-                        <div className="relative rounded-2xl overflow-hidden bg-white max-w-sm border border-ash-gray">
+                        <div className="relative rounded-2xl overflow-hidden bg-white max-w-sm border border-ash-gray group">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={step.media_url}
                             alt={step.title}
-                            className="w-full max-h-56 object-cover rounded-2xl"
+                            className="w-full max-h-56 object-cover rounded-2xl cursor-pointer hover:opacity-90 transition"
+                            onClick={() =>
+                              setPreviewDoc({
+                                url: step.media_url!,
+                                title: step.title || `Step ${idx + 1}`,
+                                fileName: step.media_file_name || 'Step Diagram',
+                              })
+                            }
                           />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setPreviewDoc({
+                                url: step.media_url!,
+                                title: step.title || `Step ${idx + 1}`,
+                                fileName: step.media_file_name || 'Step Diagram',
+                              })
+                            }
+                            className="absolute bottom-2 right-2 btn-sprout-primary text-[11px] py-1 px-2 flex items-center gap-1 shadow-md opacity-90 group-hover:opacity-100 transition cursor-pointer"
+                          >
+                            <Maximize2 className="h-3 w-3" />
+                            <span>Zoom Image</span>
+                          </button>
                         </div>
                       )}
                     </div>
                   </div>
                 ) : (
-                  /* Empty Upload Zone */
-                  <div className="relative">
+                  /* Empty Upload Zone with Drag & Drop */
+                  <div
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => handleStepDrop(idx, e)}
+                    className="relative"
+                  >
                     {/* Native Mobile Camera Input */}
                     <input
                       type="file"
@@ -675,7 +798,7 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
                     {/* Regular Image File Picker */}
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/*,.png,.jpg,.jpeg,.webp,.svg"
                       ref={(el) => {
                         imageFileInputRefs.current[idx] = el;
                       }}
@@ -694,10 +817,10 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
                       className="hidden"
                     />
 
-                    {/* Document File Picker */}
+                    {/* Document File Picker (PDF, Word DOCX/DOC, text) */}
                     <input
                       type="file"
-                      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.log,.md,.json,.yaml,.yml,.xml,.sql,.sh,.bat,.conf,.ini,.rtf,.odt,application/pdf,text/*"
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.log,.md,.json,.yaml,.yml,.xml,.sql,.sh,.bat,.conf,.ini,.rtf,.odt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/*"
                       ref={(el) => {
                         documentFileInputRefs.current[idx] = el;
                       }}
@@ -723,43 +846,58 @@ export default function StepBuilder({ manual }: StepBuilderProps) {
                         </span>
                       </div>
                     ) : (
-                      /* 4 Clean Action Triggers */
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 p-4 rounded-2xl border border-dashed border-smoke-gray bg-paper-white">
-                        <button
-                          type="button"
-                          onClick={() => cameraInputRefs.current[idx]?.click()}
-                          className="btn-sprout-ghost w-full py-2.5 text-xs flex items-center justify-center gap-2"
-                        >
-                          <Camera className="h-4 w-4" />
-                          <span>Snap Camera</span>
-                        </button>
+                      /* Interactive Upload Zone with Buttons & Drag-Drop */
+                      <div className="p-4 sm:p-5 rounded-2xl border-2 border-dashed border-ash-gray hover:border-ink-black bg-slate-50/50 hover:bg-slate-50 transition-all text-center space-y-3">
+                        <div className="space-y-0.5">
+                          <p className="text-xs sm:text-sm font-extrabold text-ink-black">
+                            Upload or drag & drop files for this step
+                          </p>
+                          <p className="text-[11px] text-pewter">
+                            Supports Word (.docx, .doc), PDF, or Images (.png, .jpg)
+                          </p>
+                        </div>
 
-                        <button
-                          type="button"
-                          onClick={() => imageFileInputRefs.current[idx]?.click()}
-                          className="btn-sprout-ghost w-full py-2.5 text-xs flex items-center justify-center gap-2"
-                        >
-                          <UploadCloud className="h-4 w-4" />
-                          <span>Choose Image</span>
-                        </button>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
+                          <button
+                            type="button"
+                            onClick={() => documentFileInputRefs.current[idx]?.click()}
+                            className="btn-sprout-primary w-full py-2 text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                            title="Upload Word (.docx/.doc) or PDF manual"
+                          >
+                            <FileText className="h-4 w-4" />
+                            <span>Upload Doc</span>
+                          </button>
 
-                        <button
-                          type="button"
-                          onClick={() => videoFileInputRefs.current[idx]?.click()}
-                          className="btn-sprout-ghost w-full py-2.5 text-xs flex items-center justify-center gap-2"
-                        >
-                          <Video className="h-4 w-4" />
-                          <span>720p Video</span>
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() => imageFileInputRefs.current[idx]?.click()}
+                            className="btn-sprout-ghost w-full py-2 text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                            title="Choose image or diagram"
+                          >
+                            <UploadCloud className="h-4 w-4" />
+                            <span>Choose Image</span>
+                          </button>
 
-                        <button
-                          type="button"
-                          onClick={() => documentFileInputRefs.current[idx]?.click()}
-                          className="btn-sprout-ghost w-full py-2.5 text-xs flex items-center justify-center gap-2 border-sprout-green/80 hover:border-ink-black"
-                        >
-                          <FileText className="h-4 w-4" />
-                          <span>Upload Doc</span>
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() => cameraInputRefs.current[idx]?.click()}
+                            className="btn-sprout-ghost w-full py-2 text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                            title="Take photo with camera"
+                          >
+                            <Camera className="h-4 w-4" />
+                            <span>Snap Camera</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => videoFileInputRefs.current[idx]?.click()}
+                            className="btn-sprout-ghost w-full py-2 text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                            title="Upload 720p video walkthrough"
+                          >
+                            <Video className="h-4 w-4" />
+                            <span>720p Video</span>
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>

@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   RotateCcw,
   Terminal,
+  Maximize2,
 } from 'lucide-react';
 import type { ManualWithSteps } from '@/lib/services/manuals';
 import { deleteManual } from '@/lib/services/manuals';
@@ -112,22 +113,20 @@ export default function ProcedureViewer({
               <button
                 type="button"
                 onClick={() => setViewMode('all')}
-                className={`px-3 py-1 text-xs font-bold rounded-md transition-all cursor-pointer ${
-                  viewMode === 'all'
+                className={`px-3 py-1 text-xs font-bold rounded-md transition-all cursor-pointer ${viewMode === 'all'
                     ? 'bg-ink-black text-paper-white'
                     : 'text-pewter hover:text-ink-black'
-                }`}
+                  }`}
               >
                 Full Playbook
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode('walkthrough')}
-                className={`px-3 py-1 text-xs font-bold rounded-md transition-all cursor-pointer ${
-                  viewMode === 'walkthrough'
+                className={`px-3 py-1 text-xs font-bold rounded-md transition-all cursor-pointer ${viewMode === 'walkthrough'
                     ? 'bg-ink-black text-paper-white'
                     : 'text-pewter hover:text-ink-black'
-                }`}
+                  }`}
               >
                 Step Execution
               </button>
@@ -243,14 +242,38 @@ export default function ProcedureViewer({
                             />
                           </div>
                         ) : (
-                          <div className="rounded-2xl overflow-hidden bg-paper-white border border-ash-gray max-w-2xl">
+                          <div className="rounded-2xl overflow-hidden bg-paper-white border border-ash-gray max-w-2xl relative group">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={step.media_url}
                               alt={step.title}
                               loading="lazy"
-                              className="w-full max-h-115 object-contain rounded-2xl"
+                              className="w-full max-h-115 object-contain rounded-2xl cursor-pointer hover:opacity-95 transition-opacity"
+                              onClick={() =>
+                                setPreviewDoc({
+                                  url: step.media_url!,
+                                  title: step.title || `Step ${step.step_order || idx + 1}`,
+                                  fileName: 'Procedure Diagram / Screenshot',
+                                })
+                              }
                             />
+                            <div className="absolute bottom-3 right-3 opacity-90 group-hover:opacity-100 transition-opacity">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setPreviewDoc({
+                                    url: step.media_url!,
+                                    title: step.title || `Step ${step.step_order || idx + 1}`,
+                                    fileName: 'Procedure Diagram / Screenshot',
+                                  })
+                                }
+                                className="btn-sprout-primary text-xs py-1 px-2.5 flex items-center gap-1 shadow-md cursor-pointer"
+                                title="Inspect image in fullscreen & zoom"
+                              >
+                                <Maximize2 className="h-3 w-3" />
+                                <span>Zoom Image</span>
+                              </button>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -348,13 +371,37 @@ export default function ProcedureViewer({
                             />
                           </div>
                         ) : (
-                          <div className="rounded-2xl overflow-hidden bg-paper-white border border-ash-gray max-w-2xl">
+                          <div className="rounded-2xl overflow-hidden bg-paper-white border border-ash-gray max-w-2xl relative group">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={currentStep.media_url}
                               alt={currentStep.title}
-                              className="w-full max-h-115 object-contain rounded-2xl"
+                              className="w-full max-h-115 object-contain rounded-2xl cursor-pointer hover:opacity-95 transition-opacity"
+                              onClick={() =>
+                                setPreviewDoc({
+                                  url: currentStep.media_url!,
+                                  title: currentStep.title || `Step ${currentStepIndex + 1}`,
+                                  fileName: 'Procedure Diagram / Screenshot',
+                                })
+                              }
                             />
+                            <div className="absolute bottom-3 right-3 opacity-90 group-hover:opacity-100 transition-opacity">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setPreviewDoc({
+                                    url: currentStep.media_url!,
+                                    title: currentStep.title || `Step ${currentStepIndex + 1}`,
+                                    fileName: 'Procedure Diagram / Screenshot',
+                                  })
+                                }
+                                className="btn-sprout-primary text-xs py-1 px-2.5 flex items-center gap-1 shadow-md cursor-pointer"
+                                title="Inspect image in fullscreen & zoom"
+                              >
+                                <Maximize2 className="h-3 w-3" />
+                                <span>Zoom Image</span>
+                              </button>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -368,13 +415,12 @@ export default function ProcedureViewer({
                             key={dotIdx}
                             type="button"
                             onClick={() => setCurrentStepIndex(dotIdx)}
-                            className={`h-2 rounded-md transition-all cursor-pointer ${
-                              dotIdx === currentStepIndex
+                            className={`h-2 rounded-md transition-all cursor-pointer ${dotIdx === currentStepIndex
                                 ? 'w-8 bg-ink-black'
                                 : dotIdx < currentStepIndex
-                                ? 'w-2 bg-sprout-green'
-                                : 'w-2 bg-ash-gray hover:bg-pewter'
-                            }`}
+                                  ? 'w-2 bg-sprout-green'
+                                  : 'w-2 bg-ash-gray hover:bg-pewter'
+                              }`}
                             title={`Jump to Step ${dotIdx + 1}`}
                           />
                         ))}

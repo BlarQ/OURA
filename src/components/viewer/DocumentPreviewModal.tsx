@@ -17,9 +17,11 @@ import {
   Check,
   Loader2,
   Maximize2,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { useModalScrollLock } from '@/lib/hooks/useModalScrollLock';
 import { getDocumentMetadata, formatDocumentName } from '@/lib/utils/documentUtils';
+import PdfViewer from '@/components/viewer/PdfViewer';
 
 interface DocumentPreviewModalProps {
   isOpen: boolean;
@@ -99,6 +101,7 @@ export default function DocumentPreviewModal({
       return <FileSpreadsheet className="h-4 w-4 text-ink-black" />;
     }
     if (meta?.category === 'pdf') return <FileText className="h-4 w-4 text-red-600" />;
+    if (meta?.category === 'image') return <ImageIcon className="h-4 w-4 text-emerald-600" />;
     return <File className="h-4 w-4 text-ink-black" />;
   };
 
@@ -229,15 +232,27 @@ export default function DocumentPreviewModal({
       <main className="flex-1 w-full overflow-auto bg-slate-900 flex items-center justify-center p-2 sm:p-6 custom-scrollbar">
         <div
           className="w-full h-full max-w-6xl mx-auto flex items-center justify-center transition-all duration-200"
-          style={{ transform: zoom !== 100 ? `scale(${zoom / 100})` : undefined, transformOrigin: 'top center' }}
+          style={{ transform: meta?.category !== 'pdf' && zoom !== 100 ? `scale(${zoom / 100})` : undefined, transformOrigin: 'top center' }}
         >
           {/* PDF Viewer Mode */}
           {meta?.category === 'pdf' && (
-            <div className="w-full h-full bg-paper-white rounded-xl shadow-2xl overflow-hidden flex flex-col border border-slate-700">
-              <iframe
-                src={`${documentUrl}#toolbar=1&navpanes=1&statusbar=1`}
-                className="w-full h-full border-0 rounded-xl"
+            <div className="w-full h-full">
+              <PdfViewer
+                url={documentUrl}
                 title={displayName}
+                initialZoom={zoom}
+              />
+            </div>
+          )}
+
+          {/* Image Viewer Mode with Zoom */}
+          {meta?.category === 'image' && (
+            <div className="w-full h-full flex items-center justify-center p-2 sm:p-4 overflow-auto">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={documentUrl}
+                alt={displayName}
+                className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl bg-white border border-slate-700 select-none transition-transform duration-200"
               />
             </div>
           )}

@@ -56,8 +56,8 @@ export async function getManuals(): Promise<ManualListItem[]> {
         idx % 3 === 0
           ? 'border-emerald-500'
           : idx % 3 === 1
-          ? 'border-blue-500'
-          : 'border-indigo-500',
+            ? 'border-blue-500'
+            : 'border-indigo-500',
     }));
   } catch (err) {
     console.error('Error fetching manuals on client:', err);
@@ -121,6 +121,115 @@ export async function createManual(title: string): Promise<string | null> {
   } catch (err) {
     console.error('Failed to create manual:', err);
     return null;
+  }
+}
+
+export interface CreateManualWithFileParams {
+  title: string;
+  file: File;
+  description?: string;
+  stepTitle?: string;
+  onProgress?: (percent: number, status: string) => void;
+}
+
+export interface CreateManualWithFileResult {
+  manualId: string | null;
+  publicUrl: string | null;
+  error?: string;
+}
+
+/**
+ * Creates a manual pre-loaded with an uploaded document or image file.
+ * Handles storage upload and sets up the primary procedure step.
+ */
+export async function createManualWithFile(
+  params: CreateManualWithFileParams
+): Promise<CreateManualWithFileResult> {
+  const { title, file, description, stepTitle, onProgress } = params;
+
+  try {
+    const cleanTitle = title.trim();
+    if (!cleanTitle) {
+      return { manualId: null, publicUrl: null, error: 'Manual title is required.' };
+    }
+
+    onProgress?.(15, 'Preparing file upload...');
+
+    const supabase = createBrowserSupabase();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    // Determine media type
+    const mimeType = file.type || '';
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    const isImage =
+      mimeType.startsWith('image/') ||
+      ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'].includes(ext);
+    const isVideo = mimeType.startsWith('video/') || ['mp4', 'mov', 'webm'].includes(ext);
+    const mediaType: MediaType = isImage ? 'image' : isVideo ? 'video' : 'document';
+
+    // If unauthenticated / demo mode
+    if (!user) {
+      onProgress?.(50, 'Converting file for local preview...');
+      const dataUrl = await blobToDataUrl(file, file.type);
+      const demoId = `manual-${Date.now()}`;
+      onProgress?.(100, 'Procedure ready!');
+      return { manualId: demoId, publicUrl: dataUrl };
+    }
+
+    onProgress?.(30, 'Creating procedure manual shell...');
+
+    // 1. Create the manual record
+    const { data: manual, error: manualErr } = await supabase
+      .from('manuals')
+      .insert({
+        title: cleanTitle,
+        user_id: user.id,
+      })
+      .select()
+      .single();
+
+    if (manualErr || !manual) {
+      throw manualErr || new Error('Failed to create manual record.');
+    }
+
+    onProgress?.(60, 'Uploading manual file to secure storage...');
+
+    // 2. Upload file to Supabase storage
+    const fileNameCustom = `manual_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    const publicUrl = await uploadMediaToStorage(file, manual.id, fileNameCustom, file.type);
+
+    onProgress?.(85, 'Finalizing procedure steps...');
+
+    // 3. Create initial step with attached file
+    const initialStepTitle = stepTitle?.trim() || cleanTitle;
+    const initialStepDesc =
+      description?.trim() ||
+      `Manual documentation from "${file.name}". Follow the operating instructions and procedure steps below.`;
+
+    const { error: stepErr } = await supabase.from('steps').insert({
+      manual_id: manual.id,
+      step_order: 1,
+      title: initialStepTitle,
+      description: initialStepDesc,
+      media_url: publicUrl,
+      media_type: mediaType,
+    });
+
+    if (stepErr) {
+      console.warn('Initial step creation warning:', stepErr);
+    }
+
+    onProgress?.(100, 'Manual created successfully!');
+    return { manualId: manual.id, publicUrl };
+  } catch (err: any) {
+    console.error('Error in createManualWithFile:', err);
+    return {
+      manualId: null,
+      publicUrl: null,
+      error: err?.message || 'Failed to upload manual file and create procedure.',
+    };
   }
 }
 
@@ -250,7 +359,32 @@ export async function uploadMediaToStorage(
 
     return publicUrl;
   } catch (err) {
-    console.error('Upload to manual_media storage failed:', err);
-    return null;
+    console.warn('Supabase storage upload failed, using Data URL fallback:', err);
+    // Fallback: Convert file or blob to base64 Data URL so user document is NEVER lost
+    try {
+      return await blobToDataUrl(fileOrBlob, contentTypeCustom);
+    } catch (fallbackErr) {
+      console.error('Data URL fallback also failed:', fallbackErr);
+      return null;
+    }
   }
+}
+
+/**
+ * Converts a File or Blob into a base64 Data URL string.
+ */
+export function blobToDataUrl(fileOrBlob: File | Blob, customMime?: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        // If custom MIME is specified and not present in result, adjust prefix if needed
+        resolve(reader.result);
+      } else {
+        reject(new Error('Failed to convert file to data URL'));
+      }
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(fileOrBlob);
+  });
 }

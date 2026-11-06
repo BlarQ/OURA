@@ -15,6 +15,7 @@ import {
   ChevronUp,
 } from 'lucide-react';
 import { getDocumentMetadata, formatDocumentName } from '@/lib/utils/documentUtils';
+import PdfViewer from '@/components/viewer/PdfViewer';
 
 interface DocumentPreviewProps {
   mediaUrl: string;
@@ -181,15 +182,14 @@ export default function DocumentPreview({
 
       {/* Embedded Document Preview Body (when expanded & not compact) */}
       {!compact && isExpanded && (
-        <div className="bg-slate-900 overflow-hidden">
+        <div>
           {meta.category === 'pdf' ? (
-            <div className="relative w-full h-96 sm:h-125 bg-slate-800">
-              <iframe
-                src={`${mediaUrl}#toolbar=0&navpanes=0`}
-                className="w-full h-full border-0"
-                title={displayName}
-              />
-            </div>
+            <PdfViewer
+              url={mediaUrl}
+              title={displayName}
+              compact={false}
+              onExpand={onOpenModal ? () => onOpenModal(mediaUrl, stepTitle, displayName) : undefined}
+            />
           ) : meta.category === 'text' && textContent !== null ? (
             <div className="p-4 sm:p-5 max-h-80 sm:max-h-96 overflow-auto font-mono text-xs text-slate-100 bg-slate-950 leading-relaxed whitespace-pre custom-scrollbar">
               {textContent}

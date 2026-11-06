@@ -1,4 +1,4 @@
-export type DocumentCategory = 'pdf' | 'office' | 'text' | 'archive' | 'generic';
+export type DocumentCategory = 'pdf' | 'office' | 'text' | 'archive' | 'image' | 'generic';
 
 export interface DocumentMetadata {
   category: DocumentCategory;
@@ -9,10 +9,19 @@ export interface DocumentMetadata {
 }
 
 /**
- * Extracts clean lowercase file extension from URL or filename.
+ * Extracts clean lowercase file extension from URL, Data URL, or filename.
  */
 export function getDocumentExtension(urlOrFileName: string): string {
   if (!urlOrFileName) return '';
+  if (urlOrFileName.startsWith('data:application/pdf')) return 'pdf';
+  if (urlOrFileName.startsWith('data:text/csv')) return 'csv';
+  if (urlOrFileName.startsWith('data:text/markdown')) return 'md';
+  if (urlOrFileName.startsWith('data:text/')) return 'txt';
+  if (urlOrFileName.startsWith('data:application/json')) return 'json';
+  if (urlOrFileName.startsWith('data:application/msword') || urlOrFileName.includes('wordprocessingml')) return 'docx';
+  if (urlOrFileName.includes('spreadsheetml') || urlOrFileName.includes('excel')) return 'xlsx';
+  if (urlOrFileName.startsWith('data:image/')) return 'png';
+
   const clean = urlOrFileName.split('?')[0].split('#')[0];
   const parts = clean.split('.');
   if (parts.length <= 1) return '';
@@ -20,12 +29,12 @@ export function getDocumentExtension(urlOrFileName: string): string {
 }
 
 /**
- * Categorizes and identifies document details based on filename or URL.
+ * Categorizes and identifies document details based on filename, Data URL, or URL.
  */
 export function getDocumentMetadata(urlOrFileName: string): DocumentMetadata {
   const ext = getDocumentExtension(urlOrFileName);
 
-  if (ext === 'pdf') {
+  if (ext === 'pdf' || urlOrFileName?.startsWith('data:application/pdf')) {
     return {
       category: 'pdf',
       label: 'PDF Document',
@@ -65,7 +74,17 @@ export function getDocumentMetadata(urlOrFileName: string): DocumentMetadata {
     };
   }
 
-  if (['txt', 'log', 'md', 'json', 'yaml', 'yml', 'xml', 'csv', 'sql', 'sh', 'bat', 'conf', 'ini', 'env', 'py', 'js', 'ts'].includes(ext)) {
+  if (['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'].includes(ext) || urlOrFileName?.startsWith('data:image/')) {
+    return {
+      category: 'image',
+      label: `${(ext || 'IMG').toUpperCase()} Image`,
+      extension: ext ? ext.toUpperCase() : 'IMG',
+      isPreviewable: true,
+      mimeTypeGuess: ext ? `image/${ext === 'jpg' ? 'jpeg' : ext}` : 'image/png',
+    };
+  }
+
+  if (['txt', 'log', 'md', 'json', 'yaml', 'yml', 'xml', 'csv', 'sql', 'sh', 'bat', 'conf', 'ini', 'env', 'py', 'js', 'ts'].includes(ext) || urlOrFileName?.startsWith('data:text/')) {
     let label = 'Text Document';
     if (ext === 'csv') label = 'CSV Data Sheet';
     else if (ext === 'md') label = 'Markdown Notes';
@@ -77,7 +96,7 @@ export function getDocumentMetadata(urlOrFileName: string): DocumentMetadata {
     return {
       category: 'text',
       label,
-      extension: ext.toUpperCase(),
+      extension: ext ? ext.toUpperCase() : 'TXT',
       isPreviewable: true,
       mimeTypeGuess: 'text/plain',
     };
@@ -106,6 +125,9 @@ export function getDocumentMetadata(urlOrFileName: string): DocumentMetadata {
  */
 export function isDocumentUrl(url: string | null): boolean {
   if (!url) return false;
+  if (url.startsWith('data:application/pdf')) return true;
+  if (url.startsWith('data:text/')) return true;
+  if (url.startsWith('data:application/msword') || url.startsWith('data:application/vnd.')) return true;
   const ext = getDocumentExtension(url);
   const docExtensions = [
     'pdf',
@@ -145,14 +167,18 @@ export function formatDocumentName(url: string, explicitName?: string, stepTitle
     return explicitName;
   }
   if (!url) return stepTitle || 'Document Attachment';
+  if (url.startsWith('data:application/pdf')) {
+    return stepTitle ? `${stepTitle}.pdf` : 'Procedure Manual.pdf';
+  }
+  if (url.startsWith('data:')) {
+    return stepTitle || 'Procedure Document';
+  }
   try {
     const cleanUrl = url.split('?')[0].split('#')[0];
     const rawFileName = cleanUrl.split('/').pop();
     if (rawFileName) {
-      // Decode URI components in filename
       const decoded = decodeURIComponent(rawFileName);
-      // If it has format media_12345.pdf or doc_12345_xyz.pdf, provide a nice name
-      if (decoded.startsWith('doc_') || decoded.startsWith('media_')) {
+      if (decoded.startsWith('doc_') || decoded.startsWith('media_') || decoded.startsWith('manual_') || decoded.startsWith('img_')) {
         const ext = getDocumentExtension(decoded);
         return stepTitle ? `${stepTitle}.${ext}` : decoded;
       }
