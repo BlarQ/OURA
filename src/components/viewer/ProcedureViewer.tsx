@@ -42,10 +42,10 @@ export default function ProcedureViewer({
     const updated = steps.map((s, idx) =>
       idx === stepIndex
         ? {
-            ...s,
-            media_url: newDataUrl,
-            media_type: 'document' as const,
-          }
+          ...s,
+          media_url: newDataUrl,
+          media_type: 'document' as const,
+        }
         : s
     );
     setSteps(updated);
@@ -131,8 +131,8 @@ export default function ProcedureViewer({
                 type="button"
                 onClick={() => setViewMode('all')}
                 className={`px-3 py-1 text-xs font-bold rounded-md transition-all cursor-pointer ${viewMode === 'all'
-                    ? 'bg-ink-black text-paper-white'
-                    : 'text-pewter hover:text-ink-black'
+                  ? 'bg-ink-black text-paper-white'
+                  : 'text-pewter hover:text-ink-black'
                   }`}
               >
                 Full Playbook
@@ -141,8 +141,8 @@ export default function ProcedureViewer({
                 type="button"
                 onClick={() => setViewMode('walkthrough')}
                 className={`px-3 py-1 text-xs font-bold rounded-md transition-all cursor-pointer ${viewMode === 'walkthrough'
-                    ? 'bg-ink-black text-paper-white'
-                    : 'text-pewter hover:text-ink-black'
+                  ? 'bg-ink-black text-paper-white'
+                  : 'text-pewter hover:text-ink-black'
                   }`}
               >
                 Step Execution
@@ -435,10 +435,10 @@ export default function ProcedureViewer({
                             type="button"
                             onClick={() => setCurrentStepIndex(dotIdx)}
                             className={`h-2 rounded-md transition-all cursor-pointer ${dotIdx === currentStepIndex
-                                ? 'w-8 bg-ink-black'
-                                : dotIdx < currentStepIndex
-                                  ? 'w-2 bg-sprout-green'
-                                  : 'w-2 bg-ash-gray hover:bg-pewter'
+                              ? 'w-8 bg-ink-black'
+                              : dotIdx < currentStepIndex
+                                ? 'w-2 bg-sprout-green'
+                                : 'w-2 bg-ash-gray hover:bg-pewter'
                               }`}
                             title={`Jump to Step ${dotIdx + 1}`}
                           />

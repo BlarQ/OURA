@@ -1,3 +1,5 @@
+import { createClient as createBrowserSupabase } from '@/lib/supabase/client';
+
 export type DocumentCategory = 'pdf' | 'office' | 'text' | 'archive' | 'image' | 'generic';
 
 export interface DocumentMetadata {
@@ -188,4 +190,33 @@ export function formatDocumentName(url: string, explicitName?: string, stepTitle
     // Fallback
   }
   return stepTitle || 'Document Attachment';
+}
+
+/**
+ * Resolves Supabase storage URLs for private buckets into working signed URLs.
+ */
+export async function resolveMediaUrl(url: string | null): Promise<string | null> {
+  if (!url) return null;
+  if (!url.includes('/storage/v1/object/public/manual_media/')) return url;
+
+  try {
+    const supabase = createBrowserSupabase();
+    const parts = url.split('/storage/v1/object/public/manual_media/');
+    if (parts.length > 1) {
+      const storagePath = parts[1].split('?')[0];
+      if (storagePath) {
+        const decodedPath = decodeURIComponent(storagePath);
+        const { data, error } = await supabase.storage
+          .from('manual_media')
+          .createSignedUrl(decodedPath, 60 * 60 * 24 * 7); // 7 days
+
+        if (data?.signedUrl) {
+          return data.signedUrl;
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to resolve signed URL for private bucket:', err);
+  }
+  return url;
 }

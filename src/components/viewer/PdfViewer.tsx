@@ -17,6 +17,7 @@ import {
   AlertCircle,
   UploadCloud,
 } from 'lucide-react';
+import { resolveMediaUrl } from '@/lib/utils/documentUtils';
 
 interface PdfViewerProps {
   url: string;
@@ -67,23 +68,32 @@ export default function PdfViewer({
 
     async function loadPdf() {
       try {
+        let effectiveUrl = currentUrl;
+        if (effectiveUrl.includes('/storage/v1/object/public/manual_media/')) {
+          const resolved = await resolveMediaUrl(effectiveUrl);
+          if (resolved && resolved !== effectiveUrl) {
+            effectiveUrl = resolved;
+          }
+        }
+
         // If it's a remote URL, check if it returns 404 or a Supabase NoSuchBucket error
-        if (currentUrl.startsWith('http://') || currentUrl.startsWith('https://')) {
+        if (effectiveUrl.startsWith('http://') || effectiveUrl.startsWith('https://')) {
           try {
-            const probeRes = await fetch(currentUrl, { method: 'GET' });
+            const probeRes = await fetch(effectiveUrl, { method: 'GET' });
             if (!probeRes.ok) {
               const probeText = await probeRes.text();
               if (
                 probeText.includes('Bucket not found') ||
                 probeText.includes('NoSuchBucket') ||
+                probeText.includes('NoSuchKey') ||
                 probeRes.status === 404
               ) {
                 if (!isCancelled) {
                   setBucketError({
                     isBucketMissing: probeText.includes('Bucket not found') || probeText.includes('NoSuchBucket'),
                     message: probeText.includes('Bucket not found') || probeText.includes('NoSuchBucket')
-                      ? 'The Supabase storage bucket "manual_media" was not found in your Supabase project (kjgtswzvvlabgkrldbyo).'
-                      : `Unable to retrieve document from storage server (${probeRes.status} ${probeRes.statusText}).`,
+                      ? 'In your Supabase dashboard, bucket "manual_media" is set to Private. Supabase blocks public access to private buckets unless "Public bucket" is toggled ON, or the file is re-attached.'
+                      : 'The requested document was not found on the storage server.',
                   });
                   setIsLoading(false);
                 }
@@ -99,7 +109,7 @@ export default function PdfViewer({
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version || '4.10.38'}/build/pdf.worker.min.mjs`;
 
         const loadingTask = pdfjsLib.getDocument({
-          url: currentUrl,
+          url: effectiveUrl,
           cMapUrl: 'https://unpkg.com/pdfjs-dist@4.10.38/cmaps/',
           cMapPacked: true,
         });
@@ -117,7 +127,7 @@ export default function PdfViewer({
           if (currentUrl.includes('manual_media')) {
             setBucketError({
               isBucketMissing: true,
-              message: 'The Supabase storage bucket "manual_media" was not found in your Supabase project (kjgtswzvvlabgkrldbyo).',
+              message: 'In your Supabase dashboard, bucket "manual_media" is set to Private. Supabase blocks public access to private buckets unless "Public bucket" is toggled ON, or the file is re-attached.',
             });
             setIsLoading(false);
             return;
@@ -380,10 +390,10 @@ export default function PdfViewer({
 
             <div className="space-y-1.5">
               <span className="badge-sprout-neutral text-[10px] py-0.5 px-2 bg-amber-500/20 text-amber-300 border-amber-500/30 font-bold uppercase">
-                Supabase Storage Bucket Setup Required
+                Supabase Storage Configuration
               </span>
               <h3 className="text-base sm:text-lg font-extrabold text-white">
-                Bucket &quot;manual_media&quot; Not Found
+                Bucket &quot;manual_media&quot; is Private or Not Found
               </h3>
               <p className="text-xs text-slate-300 max-w-md mx-auto leading-relaxed">
                 {bucketError.message}
@@ -412,13 +422,13 @@ export default function PdfViewer({
             {/* Quick 1-Minute Fix Guide */}
             <div className="mt-4 p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 text-left text-xs space-y-2 text-slate-300">
               <span className="font-extrabold text-slate-200 block text-[11px] uppercase tracking-wider">
-                Permanent Fix: Create the bucket in your Supabase Dashboard:
+                To allow public viewing without re-uploading:
               </span>
               <ol className="list-decimal list-inside space-y-1 text-[11px] text-slate-400">
-                <li>Log in to your Supabase project dashboard (<span className="text-sprout-green font-semibold">Storage</span> tab).</li>
-                <li>Click <strong className="text-slate-200">New Bucket</strong>.</li>
-                <li>Set Bucket name to <code className="text-white bg-slate-800 px-1.5 py-0.5 rounded font-mono font-bold">manual_media</code>.</li>
-                <li>Turn <strong className="text-slate-200">Public bucket</strong> to <strong className="text-emerald-400 font-bold">ON</strong> and click Save.</li>
+                <li>In your Supabase Storage dashboard (shown in your screenshot), click the three dots or edit on <strong className="text-slate-200">manual_media</strong>.</li>
+                <li>Click <strong className="text-slate-200">Edit bucket</strong>.</li>
+                <li>Toggle <strong className="text-emerald-400 font-bold">Public bucket</strong> to <strong className="text-emerald-400 font-bold">ON</strong>.</li>
+                <li>Click <strong className="text-slate-200">Save</strong>.</li>
               </ol>
             </div>
           </div>

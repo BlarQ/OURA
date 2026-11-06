@@ -352,7 +352,20 @@ export async function uploadMediaToStorage(
 
     if (uploadError) throw uploadError;
 
-    // Get public URL
+    // 1. Try creating a signed URL for private bucket support
+    try {
+      const { data: signedData } = await supabase.storage
+        .from('manual_media')
+        .createSignedUrl(storagePath, 60 * 60 * 24 * 365); // 1 year
+
+      if (signedData?.signedUrl) {
+        return signedData.signedUrl;
+      }
+    } catch {
+      // Fall through to public URL
+    }
+
+    // 2. Get public URL (if bucket is public)
     const {
       data: { publicUrl },
     } = supabase.storage.from('manual_media').getPublicUrl(storagePath);
