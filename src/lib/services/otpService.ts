@@ -31,7 +31,7 @@ if (typeof setInterval !== 'undefined') {
  */
 export function generateOtp(email: string): { code: string; expiresAt: number } {
   const normalizedEmail = email.trim().toLowerCase();
-  
+
   // Generate cryptographically secure 6-digit code (100000 - 999999)
   const randomNum = crypto.randomInt(100000, 1000000);
   const code = randomNum.toString().padStart(6, '0');
@@ -44,13 +44,6 @@ export function generateOtp(email: string): { code: string; expiresAt: number } 
     attempts: 0,
     createdAt: now,
   });
-
-  // Log in development console for easy debugging
-  console.log(`\n========================================`);
-  console.log(`🔐 [ADMIN OTP] Security OTP generated for: ${normalizedEmail}`);
-  console.log(`👉 CODE: ${code}`);
-  console.log(`⏳ Valid for 10 minutes (expires at: ${new Date(expiresAt).toLocaleTimeString()})`);
-  console.log(`========================================\n`);
 
   return { code, expiresAt };
 }
